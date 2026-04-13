@@ -162,7 +162,7 @@ const CheckoutPage = () => {
               <div className="flex flex-col gap-3">
                 {[
                   { val: 'cod',    icon: '💵', title: 'Cash on Delivery',        sub: 'Pay when your order arrives' },
-                  { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation' },
+                  // { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation' },
                 ].map(({ val, icon, title, sub }) => (
                   <label key={val} className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === val ? 'border-gold bg-gold/5' : 'border-slate-200 hover:border-gold/40'}`}>
                     <input type="radio" name="payment" value={val} checked={paymentMethod === val}
