@@ -40,7 +40,6 @@ const NEXT_CLS = {
 const OrderDrawer = ({ order, onClose, onUpdateStatus }) => {
   if (!order) return null;
   const s = STATUS_META[order.orderStatus] || {};
-  const stepIndex = ALL_STATUSES.indexOf(order.orderStatus);
   const activeFlow = ['placed', 'confirmed', 'processing', 'shipped', 'delivered'];
 
   return (
