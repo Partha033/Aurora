@@ -46,7 +46,7 @@ module.exports = {
       if (!user) return res.clientError({ msg: 'User not found' });
 
       // ── Dev bypass: useDefaultOtp flag + magic OTP "1111" ────────────
-      const isBypass = user.useDefaultOtp && otp === '111111';
+      const isBypass = user.useDefaultOtp && otp === '111111' && process.env.NODE_ENV === 'development';
 
       if (!isBypass) {
         const isValid = await user.verifyOtp(otp);
@@ -124,24 +124,29 @@ module.exports = {
   updateAddress: async (req, res) => {
     try {
       const { action, addressId, address } = req.body;
-      // action: 'add' | 'edit' | 'delete'
-      const user = await db.user.findById(req.user._id);
-      if (!user) return res.clientError({ msg: 'User not found' });
+      const userId = req.user._id;
 
       if (action === 'add') {
-        user.addresses.push(address);
+        const user = await db.user.findByIdAndUpdate(userId, { $push: { addresses: address } }, { new: true, runValidators: true });
+        return res.success({ msg: 'Address added', result: { addresses: user.addresses } });
       } else if (action === 'edit') {
-        const idx = user.addresses.findIndex(a => a._id.toString() === addressId);
-        if (idx === -1) return res.clientError({ msg: 'Address not found' });
-        Object.assign(user.addresses[idx], address);
+        if (!addressId) return res.clientError({ msg: 'addressId required for edit' });
+        const setObj = {};
+        for (const key in address) setObj[`addresses.$.${key}`] = address[key];
+        const user = await db.user.findOneAndUpdate(
+          { _id: userId, 'addresses._id': addressId },
+          { $set: setObj },
+          { new: true, runValidators: true }
+        );
+        if (!user) return res.clientError({ msg: 'Address not found' });
+        return res.success({ msg: 'Address updated', result: { addresses: user.addresses } });
       } else if (action === 'delete') {
-        user.addresses = user.addresses.filter(a => a._id.toString() !== addressId);
+        if (!addressId) return res.clientError({ msg: 'addressId required for delete' });
+        const user = await db.user.findByIdAndUpdate(userId, { $pull: { addresses: { _id: addressId } } }, { new: true });
+        return res.success({ msg: 'Address removed', result: { addresses: user.addresses } });
       } else {
         return res.clientError({ msg: 'Invalid action. Use add | edit | delete' });
       }
-
-      await user.save();
-      res.success({ msg: 'Addresses updated', result: { addresses: user.addresses } });
     } catch (error) {
       errorHandlerFunction(res, error);
     }
@@ -154,9 +159,9 @@ module.exports = {
 
       const { deleteFromCloudinary } = require('../utils/cloudinary');
 
-      // Delete old avatar from Cloudinary if exists
+      // Delete old avatar from Cloudinary if exists (fire and forget)
       const oldPublicId = req.user.profileImage?.publicId;
-      if (oldPublicId) await deleteFromCloudinary(oldPublicId);
+      if (oldPublicId) deleteFromCloudinary(oldPublicId).catch(console.error);
 
       // Save new image (Multer-Cloudinary puts url in file.path, publicId in file.filename)
       const user = await db.user.findByIdAndUpdate(

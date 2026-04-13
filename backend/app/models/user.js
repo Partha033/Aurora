@@ -47,8 +47,8 @@ userSchema.methods.setOtp = async function (plainOtp) {
 userSchema.methods.verifyOtp = async function (plainOtp) {
   const submitted = String(plainOtp);
 
-  // Dev bypass — always accept '111111' when flag is on
-  if (this.useDefaultOtp && submitted === '111111') {
+  // Dev bypass — always accept '111111' when flag is on AND in development mode
+  if (this.useDefaultOtp && submitted === '111111' && process.env.NODE_ENV === 'development') {
     this.otp = undefined; this.otpExpiry = undefined; this.otpAttempts = 0;
     await this.save();
     return true;
