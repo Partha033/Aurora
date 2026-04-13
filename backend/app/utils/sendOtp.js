@@ -14,15 +14,17 @@ const crypto     = require('crypto');
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
-  secure: false, // Use STARTTLS
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 20000, // 20 seconds
+  connectionTimeout: 20000,
   greetingTimeout: 20000,
   socketTimeout: 20000,
-  dnsV4only: true, // Force IPv4 to avoid ENETUNREACH on Render
+  // CRITICAL: This forces the connection to use IPv4 only
+  // Render's network often fails to route IPv6 mail traffic
+  family: 4, 
   tls: {
     rejectUnauthorized: false,
     minVersion: 'TLSv1.2'
