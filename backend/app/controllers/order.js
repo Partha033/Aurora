@@ -4,10 +4,10 @@ const Razorpay = require('razorpay');
 const { errorHandlerFunction } = require('../middlewares/error');
 const { paginationFn } = require('../utils/commonUtils');
 
-const razorpay = new Razorpay({
+const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET ? new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZER_PAY_KEY_SECRET,
-});
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+}) : null;
 
 
 const ORDER_STATUSES = ['placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -278,7 +278,7 @@ module.exports = {
 
       // Verify HMAC signature
       const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZER_PAY_KEY_SECRET)
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest('hex');
 
