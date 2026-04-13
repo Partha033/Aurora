@@ -1,0 +1,172 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+/* Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base Layer ──────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply font-sans bg-cream text-navy-mid antialiased leading-relaxed;
+    overflow-x: hidden;
+    /* Better tap highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif leading-tight;
+  }
+
+  a    { @apply no-underline text-inherit; }
+  img  { @apply block max-w-full; }
+  button { @apply cursor-pointer border-none bg-transparent font-sans; }
+  input, textarea, select { @apply font-sans outline-none; }
+
+  /* Better touch scrolling */
+  * { -webkit-overflow-scrolling: touch; }
+}
+
+/* ── Component Layer — reusable patterns ─────────────────────────────────── */
+@layer components {
+  /* Buttons — min touch target 44px on mobile */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 md:px-7
+           rounded font-medium text-sm tracking-wide transition-all duration-200
+           min-h-[44px] touch-manipulation;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-br from-gold-dark to-gold text-white
+           shadow-[0_2px_12px_rgba(201,168,76,0.35)]
+           hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(201,168,76,0.45)]
+           active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:transform-none;
+  }
+  .btn-outline {
+    @apply bg-transparent border border-gold text-gold-dark
+           hover:bg-gold hover:text-white
+           disabled:opacity-55 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-slate-500 hover:text-navy;
+  }
+  .btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600;
+  }
+
+  /* Form elements — 16px font to prevent iOS zoom */
+  .form-label {
+    @apply text-xs font-medium text-slate-500 uppercase tracking-wide;
+  }
+  .form-input {
+    @apply w-full px-4 py-3 border border-slate-200 rounded bg-white text-navy
+           text-base md:text-[0.95rem] transition-all duration-200
+           focus:border-gold focus:shadow-[0_0_0_3px_rgba(201,168,76,0.15)]
+           focus:outline-none min-h-[44px];
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-black/[0.06] overflow-hidden
+           transition-shadow duration-200 hover:shadow-md;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide;
+  }
+  .badge-gold    { @apply bg-gold/15 text-gold-dark; }
+  .badge-success { @apply bg-green-500/10 text-green-700; }
+  .badge-danger  { @apply bg-red-500/10 text-red-600; }
+  .badge-muted   { @apply bg-slate-100 text-slate-500; }
+
+  /* Spinner */
+  .spinner {
+    @apply w-9 h-9 border-[3px] border-slate-200 border-t-gold
+           rounded-full animate-spin mx-auto;
+  }
+  .spinner-sm {
+    @apply w-[18px] h-[18px] border-2;
+  }
+
+  /* Page loader */
+  .page-loader {
+    @apply min-h-[60vh] flex flex-col items-center justify-center gap-4 text-slate-500;
+  }
+
+  /* Products grid — responsive */
+  .products-grid {
+    @apply grid gap-4 md:gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  @screen sm {
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+  @screen md {
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+  }
+  @screen lg {
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply text-center py-12 md:py-16 px-4 md:px-6 text-slate-500;
+  }
+  .empty-state-icon { @apply text-4xl md:text-5xl mb-4; }
+  .empty-state h3   { @apply text-lg md:text-xl mb-2 text-navy; }
+
+  /* Container — responsive padding */
+  .container {
+    @apply max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section spacing */
+  .section-py {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  /* Prose text sizes — scale down on mobile */
+  .hero-title {
+    @apply font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1];
+  }
+
+  /* Responsive table wrapper */
+  .table-responsive {
+    @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+
+  /* Safe area for mobile browsers with notch */
+  .safe-bottom {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Hide scrollbar but keep scroll */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Line clamp */
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+  /* Touch friendly */
+  .touch-target { @apply min-h-[44px] min-w-[44px]; }
+}
