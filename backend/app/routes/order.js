@@ -9,8 +9,8 @@ router.get  ('/:id', protect, orderController.get);
 router.post ('/',    protect, orderController.create);
 
 // Razorpay payment routes (must be before /:id)
-router.post ('/razorpay',        protect, orderController.razorpayCreate);
-router.post ('/razorpay/verify', protect, orderController.razorpayVerify);
+// router.post ('/razorpay',        protect, orderController.razorpayCreate);
+// router.post ('/razorpay/verify', protect, orderController.razorpayVerify);
 
 // Admin routes
 router.get   ('/admin/all',       protect, isAdmin, orderController.adminGetAll);
