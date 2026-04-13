@@ -9,7 +9,7 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || 'aurora-5cu9egayn-partha033s-projects.vercel.app',
   credentials: true,
 }));
 app.use(express.json());

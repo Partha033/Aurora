@@ -1,16 +1,16 @@
-const db      = require('../models');
-const crypto  = require('crypto');
+const db = require('../models');
+const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const { errorHandlerFunction } = require('../middlewares/error');
 const { paginationFn } = require('../utils/commonUtils');
 
 const razorpay = new Razorpay({
-  key_id:     process.env.RAZER_PAY_KEY_ID,
+  key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZER_PAY_KEY_SECRET,
 });
 
 
-const ORDER_STATUSES = ['placed','confirmed','processing','shipped','delivered','cancelled'];
+const ORDER_STATUSES = ['placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 
 module.exports = {
   // ── POST /order — place order from current cart ────────────────────────
@@ -27,17 +27,17 @@ module.exports = {
 
       // Build order items from cart
       const items = cart.items.map(i => ({
-        product:  i.product._id,
-        name:     i.product.name,
-        image:    i.product.images?.[0]?.url || '',
-        price:    i.priceAtAddition,
+        product: i.product._id,
+        name: i.product.name,
+        image: i.product.images?.[0]?.url || '',
+        price: i.priceAtAddition,
         quantity: i.quantity,
         category: i.product.category,
       }));
 
-      const subtotal      = items.reduce((s, i) => s + i.price * i.quantity, 0);
+      const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
       const shippingCharge = subtotal >= 999 ? 0 : 79;
-      const totalAmount   = subtotal + shippingCharge;
+      const totalAmount = subtotal + shippingCharge;
 
       const order = await db.order.create({
         user: req.user._id,
@@ -48,7 +48,7 @@ module.exports = {
         shippingAddress,
         paymentMethod,
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
-        orderStatus:   'placed',
+        orderStatus: 'placed',
         statusHistory: [{ status: 'placed', note: 'Order placed successfully' }],
       });
 
@@ -92,7 +92,7 @@ module.exports = {
     try {
       const { perPage, currentPage, status, paymentStatus } = req.query;
       const filterQuery = { isDeleted: false };
-      if (status)        filterQuery.orderStatus  = status;
+      if (status) filterQuery.orderStatus = status;
       if (paymentStatus) filterQuery.paymentStatus = paymentStatus;
 
       const { rows, pagination } = await paginationFn(
@@ -126,9 +126,9 @@ module.exports = {
       order.statusHistory.push({ status, note: note || '', updatedAt: new Date() });
 
       if (status === 'delivered') {
-        order.deliveredAt  = new Date();
+        order.deliveredAt = new Date();
         order.paymentStatus = order.paymentMethod === 'cod' ? 'paid' : order.paymentStatus;
-        order.isPaid        = order.paymentMethod === 'cod' ? true : order.isPaid;
+        order.isPaid = order.paymentMethod === 'cod' ? true : order.isPaid;
       }
 
       await order.save();
@@ -177,7 +177,7 @@ module.exports = {
             $group: {
               _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
               revenue: { $sum: '$totalAmount' },
-              count:   { $sum: 1 },
+              count: { $sum: 1 },
             },
           },
           { $sort: { _id: 1 } },
@@ -188,7 +188,7 @@ module.exports = {
         result: {
           stats: {
             totalOrders,
-            totalRevenue:   totalRevenue[0]?.total || 0,
+            totalRevenue: totalRevenue[0]?.total || 0,
             pendingOrders,
             deliveredOrders,
             cancelledOrders,
@@ -217,24 +217,24 @@ module.exports = {
       if (!cart || cart.items.length === 0) return res.clientError({ msg: 'Your cart is empty' });
 
       const items = cart.items.map(i => ({
-        product:  i.product._id,
-        name:     i.product.name,
-        image:    i.product.images?.[0]?.url || '',
-        price:    i.priceAtAddition,
+        product: i.product._id,
+        name: i.product.name,
+        image: i.product.images?.[0]?.url || '',
+        price: i.priceAtAddition,
         quantity: i.quantity,
         category: i.product.category,
       }));
 
-      const subtotal       = items.reduce((s, i) => s + i.price * i.quantity, 0);
+      const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
       const shippingCharge = subtotal >= 999 ? 0 : 79;
-      const totalAmount    = subtotal + shippingCharge;
+      const totalAmount = subtotal + shippingCharge;
 
       // Create Razorpay order (amount in paise)
       const rpOrder = await razorpay.orders.create({
-        amount:   Math.round(totalAmount * 100),
+        amount: Math.round(totalAmount * 100),
         currency: 'INR',
-        receipt:  `receipt_${Date.now()}`,
-        notes:    { userId: String(req.user._id) },
+        receipt: `receipt_${Date.now()}`,
+        notes: { userId: String(req.user._id) },
       });
 
       // Save a pending order in MongoDB
@@ -245,21 +245,21 @@ module.exports = {
         shippingCharge,
         totalAmount,
         shippingAddress,
-        paymentMethod:   'online',
-        paymentStatus:   'pending',
-        orderStatus:     'placed',
+        paymentMethod: 'online',
+        paymentStatus: 'pending',
+        orderStatus: 'placed',
         razorpayOrderId: rpOrder.id,
-        statusHistory:   [{ status: 'placed', note: 'Razorpay payment initiated' }],
+        statusHistory: [{ status: 'placed', note: 'Razorpay payment initiated' }],
       });
 
       return res.success({
         msg: 'Razorpay order created',
         result: {
           razorpayOrderId: rpOrder.id,
-          keyId:           process.env.RAZER_PAY_KEY_ID,
-          amount:          rpOrder.amount,
-          currency:        rpOrder.currency,
-          orderId:         order._id,
+          keyId: process.env.RAZORPAY_KEY_ID,
+          amount: rpOrder.amount,
+          currency: rpOrder.currency,
+          orderId: order._id,
         },
       });
     } catch (error) {
@@ -291,12 +291,12 @@ module.exports = {
       if (!order) return res.clientError({ msg: 'Order not found' });
 
       // Mark as paid
-      order.paymentStatus      = 'paid';
-      order.isPaid             = true;
-      order.paidAt             = new Date();
-      order.razorpayPaymentId  = razorpay_payment_id;
-      order.razorpaySignature  = razorpay_signature;
-      order.orderStatus        = 'confirmed';
+      order.paymentStatus = 'paid';
+      order.isPaid = true;
+      order.paidAt = new Date();
+      order.razorpayPaymentId = razorpay_payment_id;
+      order.razorpaySignature = razorpay_signature;
+      order.orderStatus = 'confirmed';
       order.statusHistory.push({ status: 'confirmed', note: 'Payment verified via Razorpay' });
       await order.save();
 
