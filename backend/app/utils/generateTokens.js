@@ -35,11 +35,12 @@ const setRefreshTokenCookie = (res, userId) => {
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME || '7d' }
   );
 
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,                          // Not accessible via document.cookie
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-    sameSite: 'strict',                      // CSRF protection
-    maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days in ms
+    httpOnly: true,
+    secure: isProduction,           // HTTPS only in prod
+    sameSite: isProduction ? 'none' : 'strict', // 'none' required for cross-site (Vercel ↔ Render)
+    maxAge: 7 * 24 * 60 * 60 * 1000,           // 7 days in ms
   });
 
   return refreshToken;
@@ -50,11 +51,12 @@ const setRefreshTokenCookie = (res, userId) => {
  * @param {object} res
  */
 const clearRefreshTokenCookie = (res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    expires: new Date(0),  // Immediately expired
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
+    expires: new Date(0),
   });
 };
 
