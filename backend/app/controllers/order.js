@@ -61,6 +61,37 @@ module.exports = {
       cart.items = [];
       await cart.save();
 
+      // Create Notifications
+      try {
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+
+        // Notify Customer
+        const customerNotification = await db.notification.create({
+          user: req.user._id,
+          title: 'Order Placed!',
+          message: `Your order #${order._id} has been placed successfully.`,
+          type: 'order_placed',
+          metadata: { orderId: order._id }
+        });
+        io.to(req.user._id.toString()).emit('new_notification', customerNotification);
+
+        // Notify Admins
+        const admins = await db.user.find({ role: 'admin', isDeleted: false });
+        for (const admin of admins) {
+          const adminNotification = await db.notification.create({
+            user: admin._id,
+            title: 'New Order Received',
+            message: `A new order #${order._id} has been placed by ${req.user.name || req.user.email}.`,
+            type: 'new_order',
+            metadata: { orderId: order._id }
+          });
+          io.to('admin').emit('new_notification', adminNotification);
+        }
+      } catch (notifErr) {
+        console.error('Notification Error:', notifErr);
+      }
+
       res.success({ msg: 'Order placed successfully', result: { order } });
     } catch (error) {
       errorHandlerFunction(res, error);
@@ -132,6 +163,34 @@ module.exports = {
       }
 
       await order.save();
+
+      // Create Notification for User
+      try {
+        await db.notification.create({
+          user: order.user,
+          title: 'Order Status Updated',
+          message: `Your order #${order._id} status has been updated to "${status}".`,
+          type: status === 'cancelled' ? 'order_cancelled' : 'order_status_update',
+          metadata: { orderId: order._id }
+        });
+
+        // Notify Admins about the status update
+        const admins = await db.user.find({ role: 'admin', isDeleted: false });
+        for (const admin of admins) {
+          // Avoid notifying the admin who performed the update if we had their ID, 
+          // but for now let's notify all as per request "same for admin also"
+          await db.notification.create({
+            user: admin._id,
+            title: status === 'cancelled' ? 'Order Cancelled' : 'Order Status Updated',
+            message: `Order #${order._id} status has been updated to "${status}".`,
+            type: status === 'cancelled' ? 'order_cancelled' : 'order_status_update',
+            metadata: { orderId: order._id }
+          });
+        }
+      } catch (notifErr) {
+        console.error('Notification Error:', notifErr);
+      }
+
       res.success({ msg: `Order status updated to "${status}"`, result: { order } });
     } catch (error) {
       errorHandlerFunction(res, error);

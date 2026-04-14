@@ -1,15 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
+import { useNotificationStore } from '../store/notificationStore';
 import toast from 'react-hot-toast';
 import api from '../api/axiosInstance';
+import io from 'socket.io-client';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { itemCount, toggleCart } = useCartStore();
+  const { unreadCount, toggleNotifications, fetchNotifications, addNotification } = useNotificationStore();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchNotifications();
+      
+      const socketUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      const socket = io(socketUrl);
+      
+      socket.on('connect', () => {
+        socket.emit('join', user._id);
+        if (user.role === 'admin') {
+          socket.emit('join_admin');
+        }
+      });
+
+      socket.on('new_notification', (notification) => {
+        addNotification(notification);
+        toast.success(notification.title || 'New Notification');
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [isAuthenticated, user, fetchNotifications, addNotification]);
 
   const handleLogout = async () => {
     try { await api.post('/auth/logout'); } catch (_) {}
@@ -49,6 +77,21 @@ const Navbar = () => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 md:gap-4">
+          {/* Notifications */}
+          {isAuthenticated && (
+            <button onClick={toggleNotifications} className="relative text-white/75 hover:text-gold transition-colors p-1.5 rounded touch-manipulation" aria-label="Notifications">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Cart */}
           {isAuthenticated && (
             <button onClick={toggleCart} className="relative text-white/75 hover:text-gold transition-colors p-1.5 rounded touch-manipulation" aria-label="Cart">

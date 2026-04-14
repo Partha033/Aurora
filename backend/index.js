@@ -68,6 +68,25 @@ app.use((err, req, res, next) => {
 
 // ✅ PORT FIX (CRITICAL)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, "0.0.0.0", () => {
+const http = require('http');
+const socketService = require('./app/services/socket');
+
+const server = http.createServer(app);
+
+// Initialize Socket.io with the same CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+socketService.init(server, corsOptions);
+
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

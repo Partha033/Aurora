@@ -1,14 +1,13 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "AuroraJewels E-Commerce REST API",
   "main": "index.js",
   "scripts": {
-    "dev":   "nodemon index.js",
+    "dev": "nodemon index.js",
     "start": "node index.js",
-    "test":  "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "description": "AuroraJewels E-Commerce REST API",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,7 +24,8 @@
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.5",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -3,4 +3,5 @@ module.exports = {
   product: require('./product'),
   cart: require('./cart'),
   order: require('./order'),
+  notification: require('./notification'),
 };

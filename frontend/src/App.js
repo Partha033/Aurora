@@ -10,6 +10,7 @@ import { lazy, Suspense } from 'react';
 import Navbar      from './components/Navbar';
 import Footer      from './components/Footer';
 import CartDrawer  from './components/CartDrawer';
+import NotificationDrawer from './components/NotificationDrawer';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoute     from './routes/AdminRoute';
 
@@ -50,6 +51,7 @@ function App() {
       <BrowserRouter>
         <Navbar />
         <CartDrawer />
+        <NotificationDrawer />
 
         <main>
           <Suspense fallback={<PageLoader />}>
