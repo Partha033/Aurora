@@ -18,26 +18,19 @@ if (dns.setDefaultResultOrder) {
 
 // ── Transporter (created once, reused) ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  // Direct IPv4 address for smtp.gmail.com to bypass Render's IPv6-first DNS
+  host: '74.125.130.108', 
   port: 587,
   secure: false, // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // CRITICAL: Force IPv4 for the SMTP connection
-  // Using custom lookup that strictly ignores IPv6 to avoid ENETUNREACH on Render
-  lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, (err, address, family) => {
-      if (err) return callback(err);
-      callback(null, address, family);
-    });
-  },
   connectionTimeout: 20000,
   greetingTimeout: 20000,
   socketTimeout: 20000,
-  family: 4, 
   tls: {
+    servername: 'smtp.gmail.com', // Required when connecting via IP address
     rejectUnauthorized: false,
     minVersion: 'TLSv1.2'
   },
