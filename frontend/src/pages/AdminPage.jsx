@@ -31,7 +31,6 @@ import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
-const ORDER_STATUSES = ['placed','confirmed','processing','shipped','delivered','cancelled'];
 const CATEGORIES     = ['rings','necklaces','earrings','bracelets','pendants','sets','other'];
 
 const STATUS_META = {
