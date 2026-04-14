@@ -99,44 +99,86 @@ const CartDrawer = () => {
         ) : (
           <>
             {/* Items */}
-            <div className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-8 custom-scrollbar bg-slate-50/30">
+              {/* Free Shipping Progress */}
+              {subtotal < 3000 && (
+                <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm mb-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-navy flex items-center gap-2">
+                      <Truck size={14} className="text-gold" /> Free Shipping Goal
+                    </p>
+                    <span className="text-[10px] font-bold text-gold-dark">₹{subtotal.toLocaleString('en-IN')} / ₹3,000</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+                    <div 
+                      className="h-full bg-gradient-to-r from-gold-dark to-gold-light rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${Math.min((subtotal / 3000) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-medium mt-3 italic">
+                    Add <span className="text-gold-dark font-bold">₹{(3000 - subtotal).toLocaleString('en-IN')}</span> more to unlock complimentary premium shipping.
+                  </p>
+                </div>
+              )}
+
               {items.map((item) => {
                 const product = item.product;
                 const image   = product?.images?.[0]?.url;
                 return (
-                  <div key={item._id} className="flex gap-4 items-start pb-6 border-b border-slate-50 last:border-0 group animate-in slide-in-from-bottom-4 duration-300">
-                    <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-100">
-                      {image
-                        ? <img src={image} alt={product?.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        : <div className="w-full h-full flex items-center justify-center text-gold/20"><Sparkles size={24} /></div>
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-bold text-navy leading-snug mb-1 group-hover:text-gold-dark transition-colors truncate pr-4">{product?.name}</p>
-                        <button onClick={() => removeMutation.mutate(item._id)} disabled={busy}
-                          className="text-slate-200 hover:text-rose-500 transition-colors flex-shrink-0">
-                          <Trash2 size={16} />
-                        </button>
+                  <div key={item._id} className="relative group animate-in slide-in-from-right-4 duration-500">
+                    <div className="bg-white rounded-[2rem] border border-slate-100 p-4 shadow-sm hover:shadow-xl hover:border-gold/20 transition-all duration-500 flex gap-5">
+                      <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-100 relative">
+                        {image
+                          ? <img src={image} alt={product?.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          : <div className="w-full h-full flex items-center justify-center text-gold/20"><Sparkles size={24} /></div>
+                        }
+                        <div className="absolute inset-0 bg-navy/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       </div>
-                      <p className="text-[10px] uppercase tracking-widest text-gold-dark font-bold mb-4">{product?.category}</p>
-                      
-                      <div className="flex items-center justify-between mt-auto">
-                        {/* Stepper */}
-                        <div className="inline-flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
-                          <button onClick={() => item.quantity > 1 ? updateMutation.mutate({ itemId: item._id, quantity: item.quantity - 1 }) : removeMutation.mutate(item._id)}
-                            disabled={busy} className="w-8 h-8 rounded-lg bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all shadow-sm disabled:opacity-50">
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-10 text-center text-xs font-bold text-navy">{item.quantity}</span>
-                          <button onClick={() => updateMutation.mutate({ itemId: item._id, quantity: item.quantity + 1 })}
-                            disabled={busy} className="w-8 h-8 rounded-lg bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all shadow-sm disabled:opacity-50">
-                            <Plus size={14} />
+
+                      <div className="flex-1 min-w-0 flex flex-col py-1">
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <p className="text-sm font-bold text-navy leading-tight group-hover:text-gold-dark transition-colors truncate">
+                            {product?.name}
+                          </p>
+                          <button 
+                            onClick={() => removeMutation.mutate(item._id)} 
+                            disabled={busy}
+                            className="w-8 h-8 rounded-full bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300 flex items-center justify-center flex-shrink-0"
+                          >
+                            <Trash2 size={14} />
                           </button>
                         </div>
-                        <div className="text-right">
-                           <p className="text-sm font-bold text-navy">₹{(item.priceAtAddition * item.quantity).toLocaleString('en-IN')}</p>
-                           <p className="text-[10px] text-slate-400 font-medium line-through decoration-gold/40">₹{item.priceAtAddition?.toLocaleString('en-IN')}</p>
+                        
+                        <p className="text-[9px] uppercase tracking-widest text-gold-dark font-black mb-3 px-2 py-0.5 bg-gold/5 rounded-full self-start border border-gold/10">
+                          {product?.category}
+                        </p>
+                        
+                        <div className="mt-auto flex items-end justify-between">
+                          <div className="flex flex-col gap-2">
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Quantity</p>
+                            <div className="inline-flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-inner">
+                              <button 
+                                onClick={() => item.quantity > 1 ? updateMutation.mutate({ itemId: item._id, quantity: item.quantity - 1 }) : removeMutation.mutate(item._id)}
+                                disabled={busy} 
+                                className="w-7 h-7 rounded-lg bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all shadow-sm disabled:opacity-50"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="w-8 text-center text-xs font-bold text-navy">{item.quantity}</span>
+                              <button 
+                                onClick={() => updateMutation.mutate({ itemId: item._id, quantity: item.quantity + 1 })}
+                                disabled={busy} 
+                                className="w-7 h-7 rounded-lg bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all shadow-sm disabled:opacity-50"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                             <p className="text-xs text-slate-400 font-medium line-through decoration-gold/40 mb-0.5">₹{(item.priceAtAddition * item.quantity * 1.2).toLocaleString('en-IN')}</p>
+                             <p className="text-base font-black text-navy tracking-tight">₹{(item.priceAtAddition * item.quantity).toLocaleString('en-IN')}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -145,36 +187,39 @@ const CartDrawer = () => {
               })}
             </div>
 
-            {/* Footer */}
-            <div className="px-8 pt-8 pb-10 safe-bottom border-t border-slate-100 bg-slate-50/40 flex flex-col gap-4">
-              <div className="flex flex-col gap-2.5">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
-                  <span>Subtotal</span><span>₹{subtotal.toLocaleString('en-IN')}</span>
+            {/* Footer Summary */}
+            <div className="px-10 pt-10 pb-12 safe-bottom border-t border-slate-100 bg-white flex flex-col gap-6 shadow-[0_-20px_40px_rgba(0,0,0,0.03)]">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Subtotal</span>
+                  <span className="text-sm font-bold text-navy">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
-                  <span>Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-emerald-500">Free</span> : `₹${shipping}`}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Logistics</span>
+                  <span className={`text-sm font-bold ${shipping === 0 ? 'text-emerald-500' : 'text-navy'}`}>
+                    {shipping === 0 ? 'COMPLIMENTARY' : `₹${shipping}`}
+                  </span>
                 </div>
-                <div className="h-px bg-slate-200/50 my-2" />
-                <div className="flex justify-between text-xl font-bold text-navy">
-                  <span>Estimated Total</span><span>₹{total.toLocaleString('en-IN')}</span>
+                <div className="pt-4 border-t border-dashed border-slate-200 flex justify-between items-center">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gold-dark block mb-1">Total Amount</span>
+                    <p className="text-xs text-slate-400 font-medium italic">Incl. all premium taxes</p>
+                  </div>
+                  <span className="text-3xl font-black text-navy tracking-tighter italic">₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
               
-              {subtotal < 999 && (
-                <div className="bg-amber-50 rounded-xl p-3 border border-amber-100 text-center">
-                   <p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest">
-                     Add ₹{(999 - subtotal).toLocaleString('en-IN')} more for free shipping
-                   </p>
-                </div>
-              )}
-              
-              <Link to="/checkout" onClick={closeCart} className="btn btn-primary mt-2 w-full h-14 justify-center text-xs tracking-[0.2em] uppercase flex items-center gap-3 group">
-                Checkout Now <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <button onClick={closeCart} className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold hover:text-navy transition-colors">
-                Continue Shopping
-              </button>
+              <div className="flex flex-col gap-3 pt-2">
+                <Link to="/checkout" onClick={closeCart} className="btn btn-primary h-16 justify-center text-[10px] tracking-[0.3em] font-black uppercase flex items-center gap-4 group shadow-xl shadow-gold/20 hover:shadow-2xl hover:shadow-gold/30 transition-all">
+                  Proceed to Checkout <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <button 
+                  onClick={closeCart} 
+                  className="py-2 text-[9px] uppercase tracking-[0.3em] text-slate-300 font-bold hover:text-navy transition-all duration-300"
+                >
+                  Return to Boutique
+                </button>
+              </div>
             </div>
           </>
         )}
