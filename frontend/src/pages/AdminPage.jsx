@@ -220,6 +220,28 @@ const AdminPage = () => {
 
   return (
     <div className="flex min-h-screen pt-20 bg-[#020617]">
+      {/* ── Mobile Sidebar/Menu ── */}
+      <div className="xl:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-lg">
+        <div className="bg-navy/80 backdrop-blur-xl border border-white/10 rounded-[32px] p-2 flex items-center justify-around shadow-2xl">
+          <NavLink to="/admin" end className={({isActive}) => `flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${isActive?'text-gold':'text-white/40'}`}>
+            <LayoutDashboard size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Stats</span>
+          </NavLink>
+          <NavLink to="/admin/products" className={({isActive}) => `flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${isActive?'text-gold':'text-white/40'}`}>
+            <Grid size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Items</span>
+          </NavLink>
+          <NavLink to="/admin/orders" className={({isActive}) => `flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${isActive?'text-gold':'text-white/40'}`}>
+            <Package size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Orders</span>
+          </NavLink>
+          <button onClick={()=>navigate('/')} className="flex flex-col items-center gap-1 p-3 text-white/40">
+            <ArrowLeft size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Exit</span>
+          </button>
+        </div>
+      </div>
+
       <aside className="w-72 flex-shrink-0 sticky top-20 h-[calc(100vh-80px)] hidden xl:flex flex-col border-r border-white/5">
         <div className="px-10 py-10 border-b border-white/5">
           <p className="text-[10px] text-gold-light/40 uppercase tracking-[0.3em] mb-4 font-bold">Executive Suite</p>

@@ -24,6 +24,7 @@ const CheckoutPage       = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage         = lazy(() => import('./pages/OrdersPage'));
 const AdminPage          = lazy(() => import('./pages/AdminPage'));
 const ProfilePage        = lazy(() => import('./pages/ProfilePage'));
+const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
 
 // React Query global config
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ function App() {
               <Route path="/"       element={<HomePage />} />
               <Route path="/login"  element={<LoginPage />} />
               <Route path="/shop"   element={<ShopPage />} />
+              <Route path="/shop/:id" element={<ProductDetailsPage />} />
 
               {/* Protected — requires login */}
               <Route path="/checkout" element={
