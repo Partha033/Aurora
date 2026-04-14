@@ -3,9 +3,9 @@ const router = express.Router();
 const controller = require('../controllers/notification');
 const auth = require('../middlewares/auth');
 
-router.get('/', auth.verifyToken, controller.get);
-router.patch('/read-all', auth.verifyToken, controller.markAllAsRead);
-router.patch('/:id/read', auth.verifyToken, controller.markAsRead);
-router.delete('/:id', auth.verifyToken, controller.delete);
+router.get('/', auth.protect, controller.get);
+router.patch('/read-all', auth.protect, controller.markAllAsRead);
+router.patch('/:id/read', auth.protect, controller.markAsRead);
+router.delete('/:id', auth.protect, controller.delete);
 
 module.exports = router;
