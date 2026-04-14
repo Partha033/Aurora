@@ -1,63 +1,64 @@
 /**
  * utils/sendOtp.js
  *
- * ULTIMATE OPTIMIZED SMTP FOR GMAIL ON RENDER
+ * ULTIMATE FAIL-SAFE SMTP FOR GMAIL ON RENDER
  */
 
 const nodemailer = require('nodemailer');
 const crypto     = require('crypto');
 const dns        = require('dns');
 
-// ── FORCE IPv4 PRIORITY AT THE OS LEVEL ──────────────────────────────────
+// ── FORCE GOOGLE DNS & IPv4 ──────────────────────────────────────────────
+if (dns.setServers) {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+}
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
 /**
- * Using the 'service: gmail' abstraction is the most reliable way 
- * to handle Gmail's dynamic IP and port requirements on cloud hosts.
+ * Optimized Port 587 configuration. 
+ * Many cloud providers allow 587 but transparently proxy it.
  */
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // TLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // CRITICAL: Strictly force IPv4 to avoid ENETUNREACH on Render
+  // CRITICAL: Low-level socket override
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  },
+  connectionTimeout: 40000, // 40 seconds
+  greetingTimeout: 40000,
+  socketTimeout: 40000,
   family: 4,
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
   tls: {
-    // Ensures the connection is not dropped due to local certificate issues
-    rejectUnauthorized: false
+    servername: 'smtp.gmail.com',
+    rejectUnauthorized: false,
+    minVersion: 'TLSv1.2'
   }
 });
 
-/**
- * Generate a 6-digit OTP
- */
 const generateOtp = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
-/**
- * Send OTP with maximized reliability
- */
 const sendOtpEmail = async (email) => {
   const otp = generateOtp();
   const subject = '🔐 Your AuroraJewels Login OTP';
   const html = `
-    <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-      <h2 style="color: #1a1a2e;">Aurora Jewels</h2>
-      <p>Use the code below to log in:</p>
-      <h1 style="letter-spacing: 5px; color: #d4af37;">${otp}</h1>
-      <p style="color: #888; font-size: 12px;">Valid for 5 minutes.</p>
+    <div style="padding:20px; font-family: sans-serif;">
+      <h2>OTP: <span style="color:#d4af37">${otp}</span></h2>
+      <p>Valid for 5 minutes.</p>
     </div>
   `;
 
   try {
-    console.log(`🔌 Attempting to send OTP to ${email} via Gmail Service...`);
+    console.log(`🔌 Attempting SMTP Port 587 (IPv4 Forced) to ${email}...`);
     
     await transporter.sendMail({
       from: `"Aurora Jewels" <${process.env.EMAIL_USER}>`,
@@ -66,17 +67,17 @@ const sendOtpEmail = async (email) => {
       html,
     });
 
-    console.log(`✅ OTP Email sent successfully!`);
+    console.log(`✅ OTP sent successfully!`);
     return otp;
   } catch (err) {
-    console.error(`❌ Gmail Service Error: ${err.message}`);
+    console.error(`❌ SMTP Error: ${err.message}`);
     
-    // Check for common App Password issues
-    if (err.message.includes('Invalid login')) {
-      throw new Error('Email auth failed: Check your Google App Password');
-    }
+    // FAIL-SAFE: If email fails, log the OTP to the console so YOU can still log in
+    console.log(`-----------------------------------------`);
+    console.log(`EMERGENCY OTP FOR ${email}: ${otp}`);
+    console.log(`-----------------------------------------`);
     
-    throw new Error(`Connection Error: ${err.message}`);
+    throw new Error(`Email failed: ${err.message}. Check Render logs for emergency OTP.`);
   }
 };
 
