@@ -1,50 +1,38 @@
 /**
  * utils/sendOtp.js
  *
- * ULTIMATE FAIL-SAFE SMTP FOR RENDER
+ * ULTIMATE OPTIMIZED SMTP FOR GMAIL ON RENDER
  */
 
 const nodemailer = require('nodemailer');
 const crypto     = require('crypto');
 const dns        = require('dns');
 
-// ── FORCE IPv4 PRIORITY ──────────────────────────────────────────────────
+// ── FORCE IPv4 PRIORITY AT THE OS LEVEL ──────────────────────────────────
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
 /**
- * Creates a transporter optimized for Render's restrictive network.
- * Port 465 is often MORE stable on cloud providers.
+ * Using the 'service: gmail' abstraction is the most reliable way 
+ * to handle Gmail's dynamic IP and port requirements on cloud hosts.
  */
-const createTransporter = (port) => {
-  const isSecure = port === 465;
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: port,
-    secure: isSecure,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    // CRITICAL: Force IPv4 and skip DNS if possible
-    lookup: (hostname, options, callback) => {
-      dns.lookup(hostname, { family: 4 }, callback);
-    },
-    connectionTimeout: 30000, // 30 seconds for cold starts
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-    family: 4, 
-    tls: {
-      rejectUnauthorized: false,
-      minVersion: 'TLSv1.2',
-      servername: 'smtp.gmail.com'
-    },
-    // Enable debugging for logs
-    debug: true,
-    logger: true
-  });
-};
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  // CRITICAL: Strictly force IPv4 to avoid ENETUNREACH on Render
+  family: 4,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+  tls: {
+    // Ensures the connection is not dropped due to local certificate issues
+    rejectUnauthorized: false
+  }
+});
 
 /**
  * Generate a 6-digit OTP
@@ -54,35 +42,41 @@ const generateOtp = () => {
 };
 
 /**
- * Main send function with Port 465 Primary strategy
+ * Send OTP with maximized reliability
  */
 const sendOtpEmail = async (email) => {
   const otp = generateOtp();
   const subject = '🔐 Your AuroraJewels Login OTP';
-  const html = `<div style="padding:20px; background:#f8f4f0;"><h2>OTP: ${otp}</h2></div>`;
+  const html = `
+    <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <h2 style="color: #1a1a2e;">Aurora Jewels</h2>
+      <p>Use the code below to log in:</p>
+      <h1 style="letter-spacing: 5px; color: #d4af37;">${otp}</h1>
+      <p style="color: #888; font-size: 12px;">Valid for 5 minutes.</p>
+    </div>
+  `;
 
-  // Start with Port 465 (usually more stable on Render)
-  let portsToTry = [465, 587];
-  
-  for (const port of portsToTry) {
-    try {
-      console.log(`🔌 Attempting SMTP connection via Port ${port}...`);
-      const transporter = createTransporter(port);
-      await transporter.sendMail({
-        from: `"Aurora Jewels" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject,
-        html,
-      });
-      console.log(`✅ OTP sent successfully via Port ${port}`);
-      return otp;
-    } catch (err) {
-      console.warn(`⚠️ Port ${port} failed: ${err.message}`);
-      if (port === portsToTry[portsToTry.length - 1]) {
-        console.error(`❌ ALL PORTS FAILED. Please check EMAIL_PASS on Render.`);
-        throw new Error(`SMTP Failure: ${err.message}`);
-      }
+  try {
+    console.log(`🔌 Attempting to send OTP to ${email} via Gmail Service...`);
+    
+    await transporter.sendMail({
+      from: `"Aurora Jewels" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject,
+      html,
+    });
+
+    console.log(`✅ OTP Email sent successfully!`);
+    return otp;
+  } catch (err) {
+    console.error(`❌ Gmail Service Error: ${err.message}`);
+    
+    // Check for common App Password issues
+    if (err.message.includes('Invalid login')) {
+      throw new Error('Email auth failed: Check your Google App Password');
     }
+    
+    throw new Error(`Connection Error: ${err.message}`);
   }
 };
 
