@@ -14,21 +14,18 @@ const dns = require('dns');
 
 // ── Transporter (created once, reused) ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  // On Render/Production, port 465 is highly recommended over 587
-  port: (process.env.NODE_ENV === 'production') ? 465 : (parseInt(process.env.EMAIL_PORT) || 465),
-  secure: true, 
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // CRITICAL: Force IPv4 resolving to avoid "ENETUNREACH" on IPv6-heavy networks (like Render)
-  lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback);
-  },
   connectionTimeout: 20000,
   greetingTimeout: 20000,
   socketTimeout: 20000,
+  // CRITICAL: This forces the connection to use IPv4 only
+  // Render's network often fails to route IPv6 mail traffic
   family: 4, 
   tls: {
     rejectUnauthorized: false,
@@ -41,7 +38,7 @@ transporter.verify((error) => {
   if (error) {
     console.error('❌ Email transporter error — check EMAIL_USER / EMAIL_PASS in .env');
     console.error(`Reason: ${error.message}`);
-    console.error(`Config: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 465} (User: ${process.env.EMAIL_USER})`);
+    console.error(`Config: smtp.gmail.com:587 (User: ${process.env.EMAIL_USER})`);
   } else {
     console.log(`📧 Email transporter ready (Gmail: ${process.env.EMAIL_USER})`);
   }
