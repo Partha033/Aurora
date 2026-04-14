@@ -21,42 +21,57 @@ const Navbar = () => {
       fetchNotifications();
       
       const getSocketUrl = () => {
-        if (process.env.REACT_APP_API_URL) {
-          return process.env.REACT_APP_API_URL.replace('/api', '');
-        }
-        // Fallback to current origin but remove /api if it's there
-        return window.location.origin.replace('/api', '');
+        // Use the baseURL from axios configuration, but strip /api suffix
+        const baseURL = api.defaults.baseURL || '';
+        return baseURL.replace('/api', '');
       };
       
       const socketUrl = getSocketUrl();
-      const socket = io(socketUrl);
+      console.log('🔌 Attempting Socket.io connection to:', socketUrl);
+      const socket = io(socketUrl, {
+        withCredentials: true,
+        transports: ['websocket', 'polling'] // Try websocket first
+      });
       
       socket.on('connect', () => {
-        socket.emit('join', user._id);
+        console.log('✅ Socket.io Connected! ID:', socket.id);
+        const userIdStr = String(user._id);
+        socket.emit('join', userIdStr);
+        console.log('🏠 Joined user room:', userIdStr);
+        
         if (user.role === 'admin') {
           socket.emit('join_admin');
+          console.log('👑 Joined admin room');
         }
       });
 
+      socket.on('connect_error', (err) => {
+        console.error('❌ Socket.io Connection Error:', err.message);
+      });
+
       socket.on('new_notification', (notification) => {
+        console.log('🔔 New Notification received via socket:', notification);
         addNotification(notification);
         toast.success(notification.title || 'New Notification');
       });
 
       socket.on('order_updated', ({ orderId, status }) => {
+        console.log('📦 Order Update received via socket for:', orderId, 'Status:', status);
         queryClient.invalidateQueries(['my-orders']);
         queryClient.invalidateQueries(['order', orderId]);
         queryClient.invalidateQueries(['admin-orders']);
       });
 
       socket.on('dashboard_update', () => {
+        console.log('📊 Dashboard Update received via socket');
         queryClient.invalidateQueries(['admin-dashboard']);
         queryClient.invalidateQueries(['admin-orders']);
       });
 
       socket.on('product_update', () => {
+        console.log('💍 Product Update received via socket');
         queryClient.invalidateQueries(['admin-products']);
-        queryClient.invalidateQueries(['products']); // Assuming public products use 'products' query key
+        queryClient.invalidateQueries(['products']);
         queryClient.invalidateQueries(['cart']);
       });
 
