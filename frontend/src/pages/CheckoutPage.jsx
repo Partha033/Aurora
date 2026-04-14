@@ -162,7 +162,8 @@ const CheckoutPage = () => {
               <div className="flex flex-col gap-3">
                 {[
                   { val: 'cod',    icon: '💵', title: 'Cash on Delivery',        sub: 'Pay when your order arrives' },
-                  // { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation' },
+                  { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation' },
+                  { val: 'upi',    icon: '📲', title: 'Direct UPI Transfer',     sub: 'Pay via UPI ID: 9344619085@ptyes' },
                 ].map(({ val, icon, title, sub }) => (
                   <label key={val} className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === val ? 'border-gold bg-gold/5' : 'border-slate-200 hover:border-gold/40'}`}>
                     <input type="radio" name="payment" value={val} checked={paymentMethod === val}
@@ -175,6 +176,27 @@ const CheckoutPage = () => {
                   </label>
                 ))}
               </div>
+
+              {paymentMethod === 'upi' && (
+                <div className="mt-5 p-5 bg-gold/5 border border-gold/20 rounded-2xl flex flex-col items-center text-center">
+                  <p className="text-sm text-navy mb-3 font-medium">Scan QR or use UPI ID to pay</p>
+                  <div className="bg-white p-3 rounded-xl shadow-sm mb-4">
+                    {/* Placeholder for QR Code - User can replace src with their actual image path */}
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent("upi://pay?pa=9344619085@ptyes&pn=Parthiban A&cu=INR")}`} 
+                      alt="UPI QR Code" 
+                      className="w-40 h-40 object-contain"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-slate-400">UPI ID</span>
+                    <strong className="text-lg text-navy tracking-wide">9344619085@ptyes</strong>
+                    <p className="text-[10px] text-slate-400 mt-2 px-4 italic">
+                      Please mention your name or order total in the payment note. Your order will be confirmed once payment is verified.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -218,7 +240,9 @@ const CheckoutPage = () => {
                 ? <><div className="spinner spinner-sm" /> Processing…</>
                 : paymentMethod === 'cod'
                   ? `📦 Place COD Order — ₹${total.toLocaleString('en-IN')}`
-                  : `💳 Pay ₹${total.toLocaleString('en-IN')}`
+                  : paymentMethod === 'upi'
+                    ? `📲 I've Paid via UPI — ₹${total.toLocaleString('en-IN')}`
+                    : `💳 Pay ₹${total.toLocaleString('en-IN')}`
               }
             </button>
             <p className="text-[11px] text-slate-400 text-center mt-3">

@@ -1,13 +1,13 @@
 const db = require('../models');
 const crypto = require('crypto');
-// const Razorpay = require('razorpay');
+const Razorpay = require('razorpay');
 const { errorHandlerFunction } = require('../middlewares/error');
 const { paginationFn } = require('../utils/commonUtils');
 
-// const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET ? new Razorpay({
-//   key_id: process.env.RAZORPAY_KEY_ID,
-//   key_secret: process.env.RAZORPAY_KEY_SECRET,
-// }) : null;
+const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET ? new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+}) : null;
 
 
 const ORDER_STATUSES = ['placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -274,7 +274,6 @@ module.exports = {
     }
   },
 
-  /*
   // ── POST /order/razorpay — create Razorpay order ──────────────────────
   razorpayCreate: async (req, res) => {
     try {
@@ -385,5 +384,4 @@ module.exports = {
       errorHandlerFunction(res, error);
     }
   },
-  */
 };
