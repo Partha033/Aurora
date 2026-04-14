@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useNotificationStore } from '../store/notificationStore';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/axiosInstance';
 import io from 'socket.io-client';
@@ -11,6 +12,7 @@ const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { itemCount, toggleCart } = useCartStore();
   const { unreadCount, toggleNotifications, fetchNotifications, addNotification } = useNotificationStore();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -41,11 +43,28 @@ const Navbar = () => {
         toast.success(notification.title || 'New Notification');
       });
 
+      socket.on('order_updated', ({ orderId, status }) => {
+        queryClient.invalidateQueries(['my-orders']);
+        queryClient.invalidateQueries(['order', orderId]);
+        queryClient.invalidateQueries(['admin-orders']);
+      });
+
+      socket.on('dashboard_update', () => {
+        queryClient.invalidateQueries(['admin-dashboard']);
+        queryClient.invalidateQueries(['admin-orders']);
+      });
+
+      socket.on('product_update', () => {
+        queryClient.invalidateQueries(['admin-products']);
+        queryClient.invalidateQueries(['products']); // Assuming public products use 'products' query key
+        queryClient.invalidateQueries(['cart']);
+      });
+
       return () => {
         socket.disconnect();
       };
     }
-  }, [isAuthenticated, user, fetchNotifications, addNotification]);
+  }, [isAuthenticated, user, fetchNotifications, addNotification, queryClient]);
 
   const handleLogout = async () => {
     try { await api.post('/auth/logout'); } catch (_) {}

@@ -42,6 +42,12 @@ module.exports = {
         isActive:        true,
       });
 
+      try {
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+        io.emit('product_update');
+      } catch (err) {}
+
       return res.success({ msg: 'Product created successfully', result: data });
     } catch (error) {
       errorHandlerFunction(res, error);
@@ -130,6 +136,13 @@ module.exports = {
 
       await db.product.updateOne({ _id }, { $set: updateData });
       const updated = await db.product.findById(_id);
+
+      try {
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+        io.emit('product_update');
+      } catch (err) {}
+
       return res.success({ msg: 'Product updated successfully', result: updated });
     } catch (error) {
       errorHandlerFunction(res, error);
@@ -144,6 +157,13 @@ module.exports = {
       if (!product) return res.clientError({ msg: 'Product not found' });
 
       await db.product.updateOne({ _id }, { isDeleted: true, isActive: false });
+
+      try {
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+        io.emit('product_update');
+      } catch (err) {}
+
       return res.success({ msg: 'Product deleted successfully' });
     } catch (error) {
       errorHandlerFunction(res, error);
@@ -158,6 +178,13 @@ module.exports = {
       if (!product) return res.clientError({ msg: 'Product not found' });
 
       await db.product.updateOne({ _id }, { isActive: !product.isActive });
+
+      try {
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+        io.emit('product_update');
+      } catch (err) {}
+
       return res.success({
         msg: `Product ${!product.isActive ? 'shown' : 'hidden'} successfully`,
         result: { isActive: !product.isActive },

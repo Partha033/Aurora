@@ -88,6 +88,10 @@ module.exports = {
           });
           io.to('admin').emit('new_notification', adminNotification);
         }
+        // Notify all admins about data change for dashboard
+        io.to('admin').emit('dashboard_update');
+        // Notify all clients about product update (stock change)
+        io.emit('product_update');
       } catch (notifErr) {
         console.error('Notification Error:', notifErr);
       }
@@ -166,27 +170,34 @@ module.exports = {
 
       // Create Notification for User
       try {
-        await db.notification.create({
+        const socketService = require('../services/socket');
+        const io = socketService.getIo();
+
+        const userNotification = await db.notification.create({
           user: order.user,
           title: 'Order Status Updated',
           message: `Your order #${order._id} status has been updated to "${status}".`,
           type: status === 'cancelled' ? 'order_cancelled' : 'order_status_update',
           metadata: { orderId: order._id }
         });
+        io.to(order.user.toString()).emit('new_notification', userNotification);
+        // Also emit order_updated to refresh order details/list in UI
+        io.to(order.user.toString()).emit('order_updated', { orderId: order._id, status });
 
         // Notify Admins about the status update
         const admins = await db.user.find({ role: 'admin', isDeleted: false });
         for (const admin of admins) {
-          // Avoid notifying the admin who performed the update if we had their ID, 
-          // but for now let's notify all as per request "same for admin also"
-          await db.notification.create({
+          const adminNotification = await db.notification.create({
             user: admin._id,
             title: status === 'cancelled' ? 'Order Cancelled' : 'Order Status Updated',
             message: `Order #${order._id} status has been updated to "${status}".`,
             type: status === 'cancelled' ? 'order_cancelled' : 'order_status_update',
             metadata: { orderId: order._id }
           });
+          io.to('admin').emit('new_notification', adminNotification);
         }
+        // Notify all admins about data change for dashboard
+        io.to('admin').emit('dashboard_update');
       } catch (notifErr) {
         console.error('Notification Error:', notifErr);
       }
