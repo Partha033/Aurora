@@ -15,7 +15,7 @@ export const useAuthStore = create(
       accessToken: null,
       isAuthenticated: false,
 
-      // Called after OTP verify or token refresh
+      // Called after Login or token refresh
       setTokens: (accessToken, user) =>
         set({ accessToken, user, isAuthenticated: true }),
 
