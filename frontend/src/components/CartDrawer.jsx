@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ShoppingBag, X, Minus, Plus, Trash2, ArrowRight, Sparkles } from 'lucide-react';
+import { ShoppingBag, X, Minus, Plus, Trash2, ArrowRight, Sparkles, Truck } from 'lucide-react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
