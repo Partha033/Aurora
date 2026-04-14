@@ -25,9 +25,13 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // CRITICAL: Explicitly force IPv4 in DNS lookup
+  // CRITICAL: Force IPv4 for the SMTP connection
+  // Using custom lookup that strictly ignores IPv6 to avoid ENETUNREACH on Render
   lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback);
+    dns.lookup(hostname, { family: 4 }, (err, address, family) => {
+      if (err) return callback(err);
+      callback(null, address, family);
+    });
   },
   connectionTimeout: 20000,
   greetingTimeout: 20000,

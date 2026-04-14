@@ -1,4 +1,13 @@
 require('dotenv').config();
+const dns = require('dns');
+
+// ── GLOBAL FIX: Force IPv4 priority for all network requests (Node 17+) ────
+// This prevents "ENETUNREACH" errors on platforms like Render that have 
+// unstable IPv6 outbound routing.
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
