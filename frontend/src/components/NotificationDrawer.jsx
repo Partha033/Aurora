@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useNotificationStore } from '../store/notificationStore';
 import { useAuthStore } from '../store/authStore';
 
 const NotificationDrawer = () => {
+  const navigate = useNavigate();
   const { 
     isOpen, 
     closeNotifications, 
@@ -14,7 +15,7 @@ const NotificationDrawer = () => {
     markAllAsRead, 
     deleteNotification 
   } = useNotificationStore();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
@@ -27,6 +28,22 @@ const NotificationDrawer = () => {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [closeNotifications]);
+
+  const handleNotificationClick = (notif) => {
+    if (!notif.isRead) markAsRead(notif._id);
+    
+    // Close drawer
+    closeNotifications();
+
+    // Navigate based on type
+    if (notif.metadata?.orderId) {
+      if (user?.role === 'admin') {
+        navigate('/admin/manage-orders');
+      } else {
+        navigate(`/orders/${notif.metadata.orderId}`);
+      }
+    }
+  };
 
   const getIcon = (type) => {
     switch (type) {
@@ -76,8 +93,8 @@ const NotificationDrawer = () => {
             {notifications.map((notif) => (
               <div 
                 key={notif._id} 
-                className={`group flex gap-3 p-4 rounded-xl mb-2 transition-colors relative ${notif.isRead ? 'bg-white opacity-70' : 'bg-gold/5 border border-gold/10'}`}
-                onClick={() => !notif.isRead && markAsRead(notif._id)}
+                className={`group flex gap-3 p-4 rounded-xl mb-2 transition-colors relative cursor-pointer ${notif.isRead ? 'bg-white opacity-70' : 'bg-gold/5 border border-gold/10'}`}
+                onClick={() => handleNotificationClick(notif)}
               >
                 <div className="text-2xl flex-shrink-0 mt-0.5">
                   {getIcon(notif.type)}

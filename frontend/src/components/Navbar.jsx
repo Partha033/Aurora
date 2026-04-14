@@ -18,7 +18,15 @@ const Navbar = () => {
     if (isAuthenticated && user) {
       fetchNotifications();
       
-      const socketUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      const getSocketUrl = () => {
+        if (process.env.REACT_APP_API_URL) {
+          return process.env.REACT_APP_API_URL.replace('/api', '');
+        }
+        // Fallback to current origin but remove /api if it's there
+        return window.location.origin.replace('/api', '');
+      };
+      
+      const socketUrl = getSocketUrl();
       const socket = io(socketUrl);
       
       socket.on('connect', () => {
