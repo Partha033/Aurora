@@ -1,70 +1,38 @@
 const db = require("../models");
 const { errorHandlerFunction } = require("../middlewares/error");
 const jwt = require('jsonwebtoken');
-const { sendOtpEmail } = require('../utils/sendOtp');
 const { generateAccessToken, setRefreshTokenCookie, clearRefreshTokenCookie } = require('../utils/generateTokens');
 
 module.exports = {
-  requestOtp: async (req, res) => {
+  // ── POST /auth/login — Login/Register with Email Only ────────────────
+  login: async (req, res) => {
     try {
       const { email: rawEmail } = req.body;
       if (!rawEmail) return res.clientError({ msg: 'Email is required' });
 
-      // ── Normalize email ──────────────────────────────────────────────
       const email = rawEmail.trim().toLowerCase();
 
-      let user = await db.user.findOne({ email }).select('+otp +otpExpiry +otpAttempts +otpLastSent');
+      // Find or create user
+      let user = await db.user.findOne({ email });
       if (!user) {
-        user = await db.user.create({ email });
-        user = await db.user.findById(user._id).select('+otp +otpExpiry +otpAttempts +otpLastSent');
+        user = await db.user.create({ email, name: email.split('@')[0] });
       }
 
-      if (!user.canResendOtp()) {
-        const secondsLeft = Math.ceil(60 - (Date.now() - user.otpLastSent.getTime()) / 1000);
-        return res.status(429).json({ success: false, msg: `Please wait ${secondsLeft}s before requesting a new OTP` });
-      }
+      if (!user.isActive) return res.status(403).json({ success: false, msg: 'Account deactivated' });
 
-      const plainOtp = await sendOtpEmail(email);
-      await user.setOtp(plainOtp);
-
-      res.success({
-        msg: `OTP sent to ${email}`,
-        result: process.env.NODE_ENV === 'development' ? { otp: plainOtp } : {},
-      });
-    } catch (error) {
-      errorHandlerFunction(res, error);
-    }
-  },
-  verifyOtp: async (req, res) => {
-    try {
-      const { email: rawEmail, otp } = req.body;
-      if (!rawEmail || !otp) return res.clientError({ msg: 'Email and OTP are required' });
-
-      const email = rawEmail.trim().toLowerCase();
-
-      const user = await db.user.findOne({ email }).select('+otp +otpExpiry +otpAttempts +otpLastSent');
-      if (!user) return res.clientError({ msg: 'User not found' });
-
-      // ── Dev bypass: useDefaultOtp flag + magic OTP "1111" ────────────
-      const isBypass = user.useDefaultOtp && otp === '111111' && process.env.NODE_ENV === 'development';
-
-      if (!isBypass) {
-        const isValid = await user.verifyOtp(otp);
-        if (!isValid) return res.clientError({ msg: 'Invalid or expired OTP' });
-      }
-
+      // Generate tokens
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);
 
-      const safeUser = await db.user.findById(user._id);
       res.success({
         msg: 'Login successful',
-        result: { accessToken, user: safeUser },
+        result: { accessToken, user },
       });
     } catch (error) {
       errorHandlerFunction(res, error);
     }
   },
+
   refresh: async (req, res) => {
     try {
       const token = req.cookies?.refreshToken;
@@ -82,6 +50,7 @@ module.exports = {
       errorHandlerFunction(res, error);
     }
   },
+
   logout: async (req, res) => {
     try {
       clearRefreshTokenCookie(res);
@@ -90,6 +59,7 @@ module.exports = {
       errorHandlerFunction(res, error);
     }
   },
+
   getMe: async (req, res) => {
     try {
       res.success({ result: { user: req.user } });
@@ -98,7 +68,6 @@ module.exports = {
     }
   },
 
-  // ── PATCH /auth/profile — update name & phone ─────────────────────────
   updateProfile: async (req, res) => {
     try {
       const { name, phone } = req.body;
@@ -120,7 +89,6 @@ module.exports = {
     }
   },
 
-  // ── PATCH /auth/address — manage saved addresses ───────────────────────
   updateAddress: async (req, res) => {
     try {
       const { action, addressId, address } = req.body;
@@ -152,18 +120,13 @@ module.exports = {
     }
   },
 
-  // ── PATCH /auth/avatar — upload profile picture ────────────────────────
   updateAvatar: async (req, res) => {
     try {
       if (!req.file) return res.clientError({ msg: 'No image file provided' });
-
       const { deleteFromCloudinary } = require('../utils/cloudinary');
-
-      // Delete old avatar from Cloudinary if exists (fire and forget)
       const oldPublicId = req.user.profileImage?.publicId;
       if (oldPublicId) deleteFromCloudinary(oldPublicId).catch(console.error);
 
-      // Save new image (Multer-Cloudinary puts url in file.path, publicId in file.filename)
       const user = await db.user.findByIdAndUpdate(
         req.user._id,
         {
