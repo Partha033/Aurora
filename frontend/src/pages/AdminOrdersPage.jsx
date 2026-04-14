@@ -283,6 +283,7 @@ const AdminOrdersPage = () => {
     onSuccess: (_, vars) => {
       toast.success(`Order set to ${vars.status}`);
       qc.invalidateQueries(['admin-orders-page']);
+      qc.invalidateQueries(['admin-dashboard-data']);
       setSelected(prev => prev ? { ...prev, orderStatus: vars.status } : null);
     },
     onError: err => toast.error(err.response?.data?.msg || 'Update failed'),

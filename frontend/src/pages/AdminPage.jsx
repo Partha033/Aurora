@@ -55,7 +55,7 @@ const StatCard = ({ icon, label, value, sub, color, bg }) => (
 /* ─── Dashboard ──────────────────────────────────────────────────────────  */
 const AdminDashboard = () => {
   const { data, isLoading, dataUpdatedAt } = useQuery({
-    queryKey:        ['admin-dashboard'],
+    queryKey:        ['admin-dashboard-data'],
     queryFn:         () => api.get('/order/admin/dashboard').then(r => r.data.result),
     refetchInterval: 30_000,
     staleTime:       10_000,

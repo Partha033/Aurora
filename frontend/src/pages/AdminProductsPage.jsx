@@ -73,6 +73,7 @@ const ProductFormModal = ({ product, onClose }) => {
       else        await api.post('/product', fd, cfg);
       toast.success(isEdit ? '✦ Product updated!' : '✦ Product created!');
       qc.invalidateQueries(['admin-products-page']);
+      qc.invalidateQueries(['admin-dashboard-data']);
       onClose();
     } catch (err) {
       toast.error(err.response?.data?.msg || 'Save failed');
@@ -346,13 +347,22 @@ const AdminProductsPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: id => api.delete(`/product/${id}`),
-    onSuccess:  () => { toast.success('Product deleted'); qc.invalidateQueries(['admin-products-page']); setDelete(null); },
+    onSuccess:  () => { 
+      toast.success('Product deleted'); 
+      qc.invalidateQueries(['admin-products-page']); 
+      qc.invalidateQueries(['admin-dashboard-data']);
+      setDelete(null); 
+    },
     onError:   err => toast.error(err.response?.data?.msg || 'Delete failed'),
   });
 
   const toggleMutation = useMutation({
     mutationFn: id => api.patch(`/product/${id}/toggle`),
-    onSuccess: res => { toast.success(res.data.result.isActive ? 'Product published ✦' : 'Product hidden'); qc.invalidateQueries(['admin-products-page']); },
+    onSuccess: res => { 
+      toast.success(res.data.result.isActive ? 'Product published ✦' : 'Product hidden'); 
+      qc.invalidateQueries(['admin-products-page']); 
+      qc.invalidateQueries(['admin-dashboard-data']);
+    },
     onError:  err => toast.error(err.response?.data?.msg || 'Toggle failed'),
   });
 
