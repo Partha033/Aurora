@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
 
 // ── Response interceptor — silent token refresh on 401 ───────────────────
 let isRefreshing = false;
-let failedQueue  = [];
+let failedQueue = [];
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((p) => error ? p.reject(error) : p.resolve(token));
@@ -49,12 +49,12 @@ api.interceptors.response.use(
       }
 
       original._retry = true;
-      isRefreshing    = true;
+      isRefreshing = true;
 
       try {
         // Use refresh token cookie to get a new access token
         const { data } = await axios.post(
-          'https://aurora-0x5x.onrender.com/api/auth/refresh',
+          '/api/auth/refresh',
           {},
           { withCredentials: true }
         );
