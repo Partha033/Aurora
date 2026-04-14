@@ -4,6 +4,18 @@ import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useQueryClient } from '@tanstack/react-query';
+import { 
+  Bell, 
+  ShoppingBag, 
+  User, 
+  LogOut, 
+  Menu, 
+  X, 
+  ChevronRight, 
+  LayoutDashboard, 
+  ShoppingBasket,
+  UserCircle
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/axiosInstance';
 import io from 'socket.io-client';
@@ -21,55 +33,42 @@ const Navbar = () => {
       fetchNotifications();
       
       const getSocketUrl = () => {
-        // Use the baseURL from axios configuration, but strip /api suffix
         const baseURL = api.defaults.baseURL || '';
         return baseURL.replace('/api', '');
       };
       
       const socketUrl = getSocketUrl();
-      console.log('🔌 Attempting Socket.io connection to:', socketUrl);
       const socket = io(socketUrl, {
         withCredentials: true,
-        transports: ['websocket', 'polling'] // Try websocket first
+        transports: ['websocket', 'polling']
       });
       
       socket.on('connect', () => {
-        console.log('✅ Socket.io Connected! ID:', socket.id);
         const userIdStr = String(user._id);
         socket.emit('join', userIdStr);
-        console.log('🏠 Joined user room:', userIdStr);
         
         if (user.role === 'admin') {
           socket.emit('join_admin');
-          console.log('👑 Joined admin room');
         }
       });
 
-      socket.on('connect_error', (err) => {
-        console.error('❌ Socket.io Connection Error:', err.message);
-      });
-
       socket.on('new_notification', (notification) => {
-        console.log('🔔 New Notification received via socket:', notification);
         addNotification(notification);
         toast.success(notification.title || 'New Notification');
       });
 
       socket.on('order_updated', ({ orderId, status }) => {
-        console.log('📦 Order Update received via socket for:', orderId, 'Status:', status);
         queryClient.invalidateQueries(['my-orders']);
         queryClient.invalidateQueries(['order', orderId]);
         queryClient.invalidateQueries(['admin-orders']);
       });
 
       socket.on('dashboard_update', () => {
-        console.log('📊 Dashboard Update received via socket');
         queryClient.invalidateQueries(['admin-dashboard']);
         queryClient.invalidateQueries(['admin-orders']);
       });
 
       socket.on('product_update', () => {
-        console.log('💍 Product Update received via socket');
         queryClient.invalidateQueries(['admin-products']);
         queryClient.invalidateQueries(['products']);
         queryClient.invalidateQueries(['cart']);
@@ -90,44 +89,41 @@ const Navbar = () => {
   };
 
   const linkCls = ({ isActive }) =>
-    `text-xs uppercase tracking-widest transition-colors duration-200 pb-0.5 border-b ${
-      isActive ? 'text-gold-light border-gold' : 'text-white/70 border-transparent hover:text-gold-light hover:border-gold'
+    `text-[10px] uppercase tracking-[0.2em] transition-all duration-300 pb-1 border-b-2 ${
+      isActive ? 'text-gold-light border-gold font-bold' : 'text-white/60 border-transparent hover:text-gold-light hover:border-gold/40'
     }`;
 
   const navLinks = [
-    { to: '/shop',   label: 'Shop' },
-    ...(isAuthenticated ? [{ to: '/orders', label: 'Orders' }] : []),
-    ...(user?.role === 'admin' ? [{ to: '/admin', label: 'Admin' }] : []),
+    { to: '/shop',   label: 'Collection' },
+    ...(isAuthenticated ? [{ to: '/orders', label: 'My Orders' }] : []),
+    ...(user?.role === 'admin' ? [{ to: '/admin', label: 'Dashboard' }] : []),
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-navy/95 backdrop-blur-md border-b border-gold/20">
-      <div className="container flex items-center justify-between h-14 md:h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-navy/90 backdrop-blur-xl border-b border-white/5 shadow-2xl">
+      <div className="container flex items-center justify-between h-16 md:h-20">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 font-serif text-lg md:text-xl text-gold-light tracking-widest hover:text-gold transition-colors">
-          <span className="text-gold">✦</span>
-          <span className="hidden xs:inline">Aurora Jewels</span>
-          <span className="xs:hidden">Aurora</span>
+        <Link to="/" className="flex items-center gap-2 font-serif text-xl md:text-2xl text-gold-light tracking-widest hover:text-gold transition-all group">
+          <span className="text-gold group-hover:rotate-12 transition-transform duration-500">✦</span>
+          <span className="hidden xs:inline bg-gradient-to-r from-gold-light to-white bg-clip-text text-transparent uppercase font-light">Aurora Jewels</span>
+          <span className="xs:hidden font-light">Aurora</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+        <nav className="hidden md:flex items-center gap-10 lg:gap-14">
           {navLinks.map(({ to, label }) => (
             <NavLink key={to} to={to} className={linkCls}>{label}</NavLink>
           ))}
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1 md:gap-3">
           {/* Notifications */}
           {isAuthenticated && (
-            <button onClick={toggleNotifications} className="relative text-white/75 hover:text-gold transition-colors p-1.5 rounded touch-manipulation" aria-label="Notifications">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
+            <button onClick={toggleNotifications} className="relative text-white/60 hover:text-gold-light transition-all p-2 rounded-full hover:bg-white/5 group" aria-label="Notifications">
+              <Bell size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center animate-pulse">
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-navy animate-bounce">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -136,14 +132,10 @@ const Navbar = () => {
 
           {/* Cart */}
           {isAuthenticated && (
-            <button onClick={toggleCart} className="relative text-white/75 hover:text-gold transition-colors p-1.5 rounded touch-manipulation" aria-label="Cart">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
-              </svg>
+            <button onClick={toggleCart} className="relative text-white/60 hover:text-gold-light transition-all p-2 rounded-full hover:bg-white/5 group" aria-label="Cart">
+              <ShoppingBag size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gold text-navy text-[10px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center animate-pop">
+                <span className="absolute top-1 right-1 bg-gold text-navy text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-navy animate-pop">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
@@ -152,70 +144,90 @@ const Navbar = () => {
 
           {/* Auth */}
           {isAuthenticated ? (
-            <div className="relative group hidden md:block">
-              <button className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-gold-dark to-gold text-white text-sm font-bold flex items-center justify-center ring-2 ring-gold/30 touch-manipulation">
+            <div className="relative group hidden md:block ml-2">
+              <button className="w-10 h-10 rounded-full overflow-hidden border border-gold/30 hover:border-gold transition-all duration-300 shadow-lg shadow-gold/5 touch-manipulation">
                 {user?.profileImage?.url
                   ? <img src={user.profileImage.url} alt="avatar" className="w-full h-full object-cover" />
-                  : (user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?')
+                  : <div className="w-full h-full bg-gradient-to-br from-gold-dark to-gold flex items-center justify-center text-white text-sm font-bold">
+                      {user?.name?.[0]?.toUpperCase() || '?'}
+                    </div>
                 }
               </button>
-              <div className="absolute right-0 top-full mt-2 w-52 bg-navy-mid border border-gold/20 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
-                <p className="px-4 py-2 text-xs text-white/40 border-b border-white/10 truncate">{user?.email}</p>
-                <Link to="/profile" className="block px-4 py-2.5 text-sm text-white/75 hover:text-gold-light hover:bg-white/5 transition-colors">Profile</Link>
-                <Link to="/orders"  className="block px-4 py-2.5 text-sm text-white/75 hover:text-gold-light hover:bg-white/5 transition-colors">My Orders</Link>
+              <div className="absolute right-0 top-full mt-3 w-60 bg-navy/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 py-3 scale-95 group-hover:scale-100 origin-top-right">
+                <div className="px-5 py-3 mb-2 border-b border-white/10">
+                  <p className="text-[10px] text-gold-light/50 uppercase tracking-widest font-semibold mb-0.5">Signed in as</p>
+                  <p className="text-sm text-white font-medium truncate">{user?.name}</p>
+                  <p className="text-[10px] text-white/40 truncate">{user?.email}</p>
+                </div>
+                <Link to="/profile" className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/70 hover:text-gold-light hover:bg-white/5 transition-colors">
+                  <User size={16} strokeWidth={1.5} /> Profile
+                </Link>
+                <Link to="/orders"  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/70 hover:text-gold-light hover:bg-white/5 transition-colors">
+                  <ShoppingBasket size={16} strokeWidth={1.5} /> My Orders
+                </Link>
                 {user?.role === 'admin' && (
-                  <Link to="/admin" className="block px-4 py-2.5 text-sm text-white/75 hover:text-gold-light hover:bg-white/5 transition-colors">Admin Panel</Link>
+                  <Link to="/admin" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gold-light hover:bg-gold/10 transition-colors border-t border-white/5 mt-1 pt-3">
+                    <LayoutDashboard size={16} strokeWidth={1.5} /> Admin Dashboard
+                  </Link>
                 )}
-                <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:text-red-500 hover:bg-white/5 transition-colors border-t border-white/10 mt-1">
-                  Logout
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-red-400 hover:text-red-500 hover:bg-red-500/5 transition-colors border-t border-white/5 mt-2 pt-3">
+                  <LogOut size={16} strokeWidth={1.5} /> Logout
                 </button>
               </div>
             </div>
           ) : (
-            <Link to="/login" className="btn btn-primary !py-2 !px-4 md:!px-5 text-xs hidden md:inline-flex">Login</Link>
+            <Link to="/login" className="btn btn-primary !py-2.5 !px-6 text-[10px] tracking-[0.2em] uppercase hidden md:inline-flex ml-4">Login</Link>
           )}
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden flex flex-col gap-[5px] p-2 touch-manipulation"
+            className="md:hidden text-white/70 p-2 hover:text-gold-light transition-colors"
             aria-label="Toggle menu"
           >
-            <span className={`block w-5 h-0.5 bg-white/80 rounded transition-transform duration-200 origin-center ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-white/80 rounded transition-opacity duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-white/80 rounded transition-transform duration-200 origin-center ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
+            {menuOpen ? <X size={24} strokeWidth={1.5} /> : <Menu size={24} strokeWidth={1.5} />}
           </button>
         </div>
       </div>
 
       {/* Mobile slide-down menu */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 border-t border-gold/15' : 'max-h-0'}`}>
-        <div className="bg-navy flex flex-col px-5 py-2">
+      <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${menuOpen ? 'max-h-screen border-t border-white/5' : 'max-h-0'}`}>
+        <div className="bg-navy/95 backdrop-blur-2xl flex flex-col px-6 py-6 gap-2">
           {navLinks.map(({ to, label }) => (
             <Link key={to} to={to} onClick={() => setMenuOpen(false)}
-              className="py-3.5 text-white/75 border-b border-white/5 text-sm hover:text-gold-light transition-colors font-medium">
+              className="flex items-center justify-between py-4 text-white/80 border-b border-white/5 text-sm hover:text-gold-light transition-colors tracking-wide">
               {label}
+              <ChevronRight size={16} className="text-white/20" />
             </Link>
           ))}
           {isAuthenticated ? (
             <>
-              <div className="flex items-center gap-3 py-3.5 border-b border-white/5">
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-gold-dark to-gold text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center gap-4 py-6 border-b border-white/5">
+                <div className="w-12 h-12 rounded-full overflow-hidden border border-gold/30">
                   {user?.profileImage?.url
                     ? <img src={user.profileImage.url} alt="" className="w-full h-full object-cover" />
-                    : (user?.name?.[0]?.toUpperCase() || '?')
+                    : <div className="w-full h-full bg-gradient-to-br from-gold-dark to-gold flex items-center justify-center text-white text-base font-bold">
+                        {user?.name?.[0]?.toUpperCase() || '?'}
+                      </div>
                   }
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-white/80 font-medium truncate">{user?.name}</p>
-                  <p className="text-[10px] text-white/40 truncate">{user?.email}</p>
+                  <p className="text-sm text-white font-medium truncate">{user?.name}</p>
+                  <p className="text-[11px] text-white/40 truncate">{user?.email}</p>
                 </div>
               </div>
-              <Link to="/profile" onClick={() => setMenuOpen(false)} className="py-3.5 text-white/70 border-b border-white/5 text-sm hover:text-gold-light transition-colors">Profile</Link>
-              <button onClick={handleLogout} className="py-3.5 text-left text-red-400 text-sm hover:text-red-300 transition-colors">Logout</button>
+              <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-4 text-white/70 border-b border-white/5 text-sm">
+                <UserCircle size={18} strokeWidth={1.5} /> Profile
+              </Link>
+              <button onClick={handleLogout} className="flex items-center gap-3 py-6 text-red-400 text-sm font-medium">
+                <LogOut size={18} strokeWidth={1.5} /> Logout
+              </button>
             </>
           ) : (
-            <Link to="/login" onClick={() => setMenuOpen(false)} className="py-3.5 text-gold text-sm font-semibold">Sign In →</Link>
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="flex items-center justify-between py-6 text-gold text-base font-medium tracking-wide">
+              Sign In to Aurora
+              <ChevronRight size={20} />
+            </Link>
           )}
         </div>
       </div>

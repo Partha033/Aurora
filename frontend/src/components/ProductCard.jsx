@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { ShoppingBag, Eye, Heart, Sparkles } from 'lucide-react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -20,61 +21,87 @@ const ProductCard = ({ product }) => {
     if (!isAuthenticated) { toast.error('Please login to add items to cart'); return; }
     if (isOutOfStock) return;
     try {
-      // POST /cart — addItem endpoint
       const { data } = await api.post('/cart', { productId: _id, quantity: 1 });
-      setCart(data.result);   // result: { items, subtotal, shipping, total }
+      setCart(data.result);
       openCart();
-      toast.success(`${name} added to cart ✦`);
+      toast.success(`${name} added to cart`);
     } catch (err) {
       toast.error(err.response?.data?.msg || 'Failed to add to cart');
     }
   };
 
   return (
-    <Link to={`/shop/${_id}`}
-      className="group flex flex-col bg-white rounded-xl overflow-hidden border border-black/[0.07] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl no-underline text-inherit">
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-cream">
+    <div className="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 transition-all duration-500 hover:shadow-2xl hover:shadow-gold/10 flex flex-col h-full">
+      {/* Image Container */}
+      <Link to={`/shop/${_id}`} className="relative aspect-[4/5] overflow-hidden bg-slate-50 block">
         {image
           ? <img src={image} alt={name} loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-          : <div className="w-full h-full flex items-center justify-center text-5xl text-gold-light bg-gradient-to-br from-cream to-amber-50">✦</div>
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          : <div className="w-full h-full flex items-center justify-center bg-cream/30">
+              <Sparkles className="text-gold/20 w-12 h-12" />
+            </div>
         }
-        {hasDiscount && (
-          <span className="absolute top-2.5 left-2.5 bg-gold text-navy text-[10px] font-bold px-2 py-0.5 rounded-full">
-            {discountPercent ? `-${discountPercent}%` : 'SALE'}
-          </span>
-        )}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-navy/60 flex items-center justify-center">
-            <span className="text-white text-xs font-semibold uppercase tracking-widest">Out of Stock</span>
-          </div>
-        )}
-      </div>
-
-      {/* Body */}
-      <div className="flex flex-col gap-1.5 p-4 flex-1">
-        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-gold-dark font-medium">{category}</span>
-        <h3 className="font-serif text-base md:text-lg font-semibold text-navy leading-snug line-clamp-2">{name}</h3>
-
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-base font-semibold text-navy">₹{finalPrice.toLocaleString('en-IN')}</span>
-          {hasDiscount && <span className="text-sm text-slate-400 line-through">₹{price.toLocaleString('en-IN')}</span>}
+        
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+          {hasDiscount && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg shadow-red-500/20">
+              {discountPercent}% OFF
+            </span>
+          )}
+          {isOutOfStock && (
+            <span className="bg-navy/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+              Sold Out
+            </span>
+          )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={isOutOfStock}
-          className={`mt-auto w-full py-3 rounded text-xs font-semibold tracking-wide uppercase transition-all duration-200 min-h-[44px] touch-manipulation ${
-            isOutOfStock
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'bg-gradient-to-br from-gold-dark to-gold text-white hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] hover:-translate-y-0.5 active:translate-y-0'
-          }`}
-        >
-          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
+        {/* Hover Actions */}
+        <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 z-20">
+          <button className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 shadow-xl">
+            <Heart size={18} />
+          </button>
+          <Link to={`/shop/${_id}`} className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 delay-75 shadow-xl">
+            <Eye size={18} />
+          </Link>
+        </div>
+
+        {/* Quick Add Button */}
+        {!isOutOfStock && (
+          <button
+            onClick={handleAddToCart}
+            className="absolute bottom-0 left-0 right-0 py-4 bg-gold text-navy font-bold text-xs uppercase tracking-[0.2em] translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-30 flex items-center justify-center gap-2"
+          >
+            <ShoppingBag size={14} /> Quick Add
+          </button>
+        )}
+      </Link>
+
+      {/* Details */}
+      <div className="p-5 flex flex-col flex-1 bg-white">
+        <div className="flex justify-between items-start mb-2">
+          <span className="text-[10px] uppercase tracking-widest text-gold-dark font-bold">{category}</span>
+          <div className="flex items-center gap-0.5 text-amber-400">
+             {/* Simple stars or rating can go here if needed */}
+          </div>
+        </div>
+        
+        <Link to={`/shop/${_id}`} className="block mb-3 flex-1">
+          <h3 className="font-serif text-lg font-semibold text-navy leading-snug group-hover:text-gold-dark transition-colors line-clamp-2">
+            {name}
+          </h3>
+        </Link>
+
+        <div className="flex items-center gap-3 mt-auto pt-4 border-t border-slate-50">
+          <span className="text-xl font-bold text-navy">₹{finalPrice.toLocaleString('en-IN')}</span>
+          {hasDiscount && (
+            <span className="text-sm text-slate-300 line-through font-light">
+              ₹{price.toLocaleString('en-IN')}
+            </span>
+          )}
+        </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
