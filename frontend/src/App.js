@@ -76,13 +76,7 @@ function App() {
               } />
 
               {/* Admin only */}
-              <Route path="/admin"          element={<AdminRoute><AdminPage /></AdminRoute>} />
-              <Route path="/admin/products" element={<AdminRoute><AdminPage /></AdminRoute>} />
-              <Route path="/admin/orders"   element={<AdminRoute><AdminPage /></AdminRoute>} />
-
-              {/* Standalone admin management pages */}
-              <Route path="/admin/manage-products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
-              <Route path="/admin/manage-orders"   element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+              <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
 
               {/* 404 */}
               <Route path="*" element={

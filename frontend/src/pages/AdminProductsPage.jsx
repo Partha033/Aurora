@@ -371,7 +371,7 @@ const AdminProductsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16">
+    <div className="bg-slate-50">
       {/* ── Page Header ── */}
       <div className="bg-navy shadow-xl">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-7 flex flex-wrap items-center justify-between gap-4">

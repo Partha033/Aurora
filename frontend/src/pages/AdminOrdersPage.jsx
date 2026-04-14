@@ -310,7 +310,7 @@ const AdminOrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-20">
+    <div className="bg-[#f8fafc]">
       {/* ── Page Header ── */}
       <div className="bg-navy relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-gold/10 to-transparent" />
