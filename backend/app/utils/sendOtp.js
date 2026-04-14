@@ -9,8 +9,12 @@
 
 const nodemailer = require('nodemailer');
 const crypto     = require('crypto');
+const dns        = require('dns');
 
-const dns = require('dns');
+// ── FORCE IPv4 FOR ALL CONNECTIONS (Node 17+) ──────────────────────────────
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 // ── Transporter (created once, reused) ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -21,11 +25,13 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // CRITICAL: Explicitly force IPv4 in DNS lookup
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  },
   connectionTimeout: 20000,
   greetingTimeout: 20000,
   socketTimeout: 20000,
-  // CRITICAL: This forces the connection to use IPv4 only
-  // Render's network often fails to route IPv6 mail traffic
   family: 4, 
   tls: {
     rejectUnauthorized: false,
