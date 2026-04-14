@@ -24,8 +24,6 @@ const CheckoutPage       = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage         = lazy(() => import('./pages/OrdersPage'));
 const AdminPage          = lazy(() => import('./pages/AdminPage'));
 const ProfilePage        = lazy(() => import('./pages/ProfilePage'));
-const AdminProductsPage  = lazy(() => import('./pages/AdminProductsPage'));
-const AdminOrdersPage    = lazy(() => import('./pages/AdminOrdersPage'));
 
 // React Query global config
 const queryClient = new QueryClient({

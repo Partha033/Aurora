@@ -1,6 +1,5 @@
-import { useState, useRef } from 'react';
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
 import { 
   LayoutDashboard, 
@@ -12,30 +11,20 @@ import {
   CheckCircle2, 
   XCircle, 
   Clock, 
-  Plus, 
-  Search, 
   Grid, 
-  List, 
   Edit, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
-  Image as ImageIcon,
   ChevronRight,
   ArrowLeft,
   Sparkles,
-  TrendingUp,
-  AlertTriangle
+  TrendingUp
 } from 'lucide-react';
 import api from '../api/axiosInstance';
-import toast from 'react-hot-toast';
 
 // Import standalone management pages
 import AdminProductsPage from './AdminProductsPage';
 import AdminOrdersPage from './AdminOrdersPage';
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
-const CATEGORIES     = ['rings','necklaces','earrings','bracelets','pendants','sets','other'];
 
 const STATUS_META = {
   placed:     { cls: 'bg-amber-50 text-amber-700 border-amber-100', label: 'Placed', icon: <Clock size={12}/> },
