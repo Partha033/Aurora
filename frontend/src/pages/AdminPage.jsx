@@ -238,6 +238,14 @@ const AdminPage = () => {
             <Package size={20} />
             <span className="text-[8px] font-bold uppercase tracking-widest">Orders</span>
           </NavLink>
+          <NavLink to="/admin/coupons" className={({isActive}) => `flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${isActive?'text-gold':'text-white/40'}`}>
+            <Tag size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Coupons</span>
+          </NavLink>
+          <NavLink to="/admin/settings" className={({isActive}) => `flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${isActive?'text-gold':'text-white/40'}`}>
+            <Settings size={20} />
+            <span className="text-[8px] font-bold uppercase tracking-widest">Config</span>
+          </NavLink>
           <button onClick={()=>navigate('/')} className="flex flex-col items-center gap-1 p-3 text-white/40">
             <ArrowLeft size={20} />
             <span className="text-[8px] font-bold uppercase tracking-widest">Exit</span>
