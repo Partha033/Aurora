@@ -4,14 +4,11 @@ import {
   Plus, 
   Trash2, 
   Ticket, 
-  Clock, 
-  Tag, 
   Calendar, 
   CheckCircle2, 
   XCircle,
   Search,
   ArrowLeft,
-  ChevronRight,
   Edit
 } from 'lucide-react';
 import { Link } from 'react-router-dom';

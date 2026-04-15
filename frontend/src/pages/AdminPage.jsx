@@ -13,6 +13,7 @@ import {
   Clock, 
   Grid, 
   Edit, 
+  Tag,
   ChevronRight,
   ArrowLeft,
   Sparkles,

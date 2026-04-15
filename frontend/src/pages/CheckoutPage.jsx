@@ -5,6 +5,7 @@ import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { Tag, XCircle } from 'lucide-react';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
