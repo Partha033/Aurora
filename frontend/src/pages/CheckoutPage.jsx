@@ -14,10 +14,20 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [useProfileAddr, setUseProfileAddr] = useState(null); // null = custom form
   const [address, setAddress] = useState({ line1: '', line2: '', city: '', state: '', pincode: '', country: 'India', label: 'Home' });
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [applying, setApplying] = useState(false);
 
   const { data: cart, isLoading } = useQuery({
     queryKey: ['cart'],
     queryFn:  () => api.get('/cart').then(r => r.data.result),
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn:  () => api.get('/settings').then(r => r.data.result),
   });
 
   const { data: meData } = useQuery({
@@ -28,8 +38,29 @@ const CheckoutPage = () => {
   const savedAddresses = meData?.addresses ?? [];
   const items    = cart?.items    ?? [];
   const subtotal = cart?.subtotal ?? 0;
-  const shipping = cart?.shipping ?? 0;
-  const total    = cart?.total    ?? 0;
+  
+  // Dynamic shipping calculation
+  const baseShipping = settings?.shipping?.baseCharge ?? 100;
+  const threshold    = settings?.shipping?.freeThreshold ?? 3000;
+  const shipping     = subtotal >= threshold ? 0 : baseShipping;
+
+  const couponDiscount = appliedCoupon?.discount ?? 0;
+  const total          = subtotal + shipping - couponDiscount;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setApplying(true);
+    try {
+      const { data } = await api.post('/coupon/apply', { code: couponCode, orderAmount: subtotal });
+      setAppliedCoupon(data.result);
+      toast.success(`Coupon "${data.result.code}" applied!`);
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Invalid coupon');
+      setAppliedCoupon(null);
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const onChange = e => setAddress(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -55,6 +86,7 @@ const CheckoutPage = () => {
       const { data } = await api.post('/order', {
         shippingAddress: getShippingAddress(),
         paymentMethod,
+        couponCode: appliedCoupon?.code
       });
       clearCart();
       toast.success('Order placed successfully! 🎉');
@@ -71,6 +103,7 @@ const CheckoutPage = () => {
     try {
       const { data: rpData } = await api.post('/order/razorpay', {
         shippingAddress: getShippingAddress(),
+        couponCode: appliedCoupon?.code
       });
       const options = {
         key: rpData.result.keyId, amount: rpData.result.amount,
@@ -161,10 +194,10 @@ const CheckoutPage = () => {
             <h2 className="font-serif text-lg md:text-xl text-navy mb-4 md:mb-5 pb-3 border-b border-slate-100">Payment Method</h2>
               <div className="flex flex-col gap-3">
                 {[
-                  { val: 'cod',    icon: '💵', title: 'Cash on Delivery',        sub: 'Pay when your order arrives' },
-                  { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation' },
-                  { val: 'upi',    icon: '📲', title: 'Direct UPI Transfer',     sub: 'Pay via UPI ID: 9344619085@ptyes' },
-                ].map(({ val, icon, title, sub }) => (
+                  { val: 'cod',    icon: '💵', title: 'Cash on Delivery',        sub: 'Pay when your order arrives', enabled: settings?.paymentMethods?.cod ?? true },
+                  { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation', enabled: settings?.paymentMethods?.online ?? true },
+                  { val: 'upi',    icon: '📲', title: 'Direct UPI Transfer',     sub: 'Pay via UPI ID: 9344619085@ptyes', enabled: true },
+                ].filter(p => p.enabled).map(({ val, icon, title, sub }) => (
                   <label key={val} className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === val ? 'border-gold bg-gold/5' : 'border-slate-200 hover:border-gold/40'}`}>
                     <input type="radio" name="payment" value={val} checked={paymentMethod === val}
                       onChange={() => setPaymentMethod(val)} className="accent-gold w-4 h-4" />
@@ -204,6 +237,43 @@ const CheckoutPage = () => {
           <div className="card p-7 sticky top-24">
             <h2 className="font-serif text-xl text-navy mb-5 pb-3 border-b border-slate-100">Order Summary</h2>
 
+            {/* Coupon Application */}
+            <div className="mb-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Promotional Voucher</p>
+              {!appliedCoupon ? (
+                <div className="flex gap-2">
+                  <input 
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-gold/20 uppercase font-bold"
+                    placeholder="Enter Code"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleApplyCoupon}
+                    disabled={applying || !couponCode.trim()}
+                    className="bg-navy text-gold-light px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-navy-mid transition-all disabled:opacity-50"
+                  >
+                    {applying ? '...' : 'Apply'}
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center justify-between animate-in zoom-in duration-300">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+                      <Tag size={12} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-emerald-700 uppercase">{appliedCoupon.code}</p>
+                      <p className="text-[8px] font-bold text-emerald-600 uppercase">Discount Applied</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setAppliedCoupon(null)} className="text-emerald-400 hover:text-emerald-700 transition-colors">
+                    <XCircle size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="flex flex-col gap-4 mb-5 max-h-72 overflow-y-auto pr-1">
               {items.map(item => (
                 <div key={item._id} className="flex items-center gap-3">
@@ -226,6 +296,11 @@ const CheckoutPage = () => {
                 <span>Shipping</span>
                 <span>{shipping === 0 ? <em className="text-green-600 font-semibold not-italic">FREE</em> : `₹${shipping}`}</span>
               </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600 font-bold italic">
+                  <span>Voucher Discount</span><span>- ₹{couponDiscount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-semibold text-navy border-t border-slate-200 pt-2.5 mt-1">
                 <strong>Total</strong><strong>₹{total.toLocaleString('en-IN')}</strong>
               </div>

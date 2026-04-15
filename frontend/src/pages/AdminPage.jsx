@@ -23,6 +23,8 @@ import api from '../api/axiosInstance';
 // Import standalone management pages
 import AdminProductsPage from './AdminProductsPage';
 import AdminOrdersPage from './AdminOrdersPage';
+import AdminSettingsPage from './AdminSettingsPage';
+import AdminCouponsPage from './AdminCouponsPage';
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -281,13 +283,17 @@ const AdminPage = () => {
 
           <div>
              <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] px-10 mb-6 font-bold">Management</p>
-             <NavLink to="/admin/manage-products" className={linkCls}>
+             <NavLink to="/admin/products" className={linkCls}>
                <Edit size={18} className="transition-transform group-hover:scale-110" /> 
-               <span>Authoring</span>
+               <span>Catalogue</span>
              </NavLink>
-             <NavLink to="/admin/manage-orders" className={linkCls}>
+             <NavLink to="/admin/coupons" className={linkCls}>
+               <Tag size={18} className="transition-transform group-hover:scale-110" /> 
+               <span>Vouchers</span>
+             </NavLink>
+             <NavLink to="/admin/settings" className={linkCls}>
                <Settings size={18} className="transition-transform group-hover:scale-110" /> 
-               <span>Configuration</span>
+               <span>Controls</span>
              </NavLink>
           </div>
         </nav>
@@ -305,6 +311,9 @@ const AdminPage = () => {
             <Route index           element={<div className="p-8 md:p-14 lg:p-20"><AdminDashboard/></div>}/>
             <Route path="products" element={<AdminProductsPage/>}/>
             <Route path="orders"   element={<AdminOrdersPage/>}/>
+            <Route path="coupons"  element={<AdminCouponsPage/>}/>
+            <Route path="settings" element={<AdminSettingsPage/>}/>
+            {/* Compatibility routes */}
             <Route path="manage-products" element={<AdminProductsPage/>}/>
             <Route path="manage-orders"   element={<AdminOrdersPage/>}/>
           </Routes>
