@@ -47,17 +47,31 @@ module.exports = {
       try {
         await sendEmail({
           to: user.email,
-          subject: 'Your Login OTP - Aurora Jewels',
+          subject: '✦ Your Aurora Jewels Login Code',
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
-              <h2 style="color: #c9a84c; text-align: center;">Aurora Jewels</h2>
-              <p>Hello,</p>
-              <p>Your OTP for logging into Aurora Jewels is:</p>
-              <div style="background: #f9f9f9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1a0a2e; margin: 20px 0;">
-                ${otp}
+            <div style="font-family: 'Playfair Display', serif; max-width: 600px; margin: 0 auto; background-color: #0a0e1a; color: #ffffff; padding: 40px; border-radius: 20px; border: 1px solid #c9a84c;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #c9a84c; font-size: 32px; letter-spacing: 4px; margin: 0;">AURORA JEWELS</h1>
+                <div style="width: 50px; height: 2px; background: #c9a84c; margin: 15px auto;"></div>
               </div>
-              <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
-              <p>If you didn't request this, please ignore this email.</p>
+              
+              <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 15px; text-align: center; border: 1px solid rgba(201,168,76,0.2);">
+                <p style="font-size: 18px; color: #e0e0e0; margin-bottom: 25px;">Hello there,</p>
+                <p style="font-size: 16px; color: #b0b0b0; margin-bottom: 30px;">Use the exclusive verification code below to access your account:</p>
+                
+                <div style="background: #161b2b; padding: 20px; border-radius: 10px; border: 2px dashed #c9a84c; display: inline-block; margin-bottom: 30px;">
+                  <span style="font-size: 42px; font-weight: bold; letter-spacing: 12px; color: #c9a84c; font-family: monospace;">${otp}</span>
+                </div>
+                
+                <p style="font-size: 14px; color: #888; line-height: 1.6;">
+                  This code is valid for <span style="color: #c9a84c;">10 minutes</span>.<br>
+                  For your security, please do not share this code with anyone.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin-top: 35px; color: #666; font-size: 12px; letter-spacing: 1px;">
+                <p>© 2026 AURORA JEWELS | EXQUISITE ELEGANCE</p>
+              </div>
             </div>
           `,
         });
@@ -78,16 +92,21 @@ module.exports = {
       if (!rawEmail || !otp) return res.clientError({ msg: 'Email and OTP are required' });
 
       const email = rawEmail.trim().toLowerCase();
+      // Explicitly include otp and otpExpiry which are select: false
       const user = await db.user.findOne({ email }).select('+otp +otpExpiry');
 
-      if (!user || user.otp !== otp || user.otpExpiry < Date.now()) {
+      if (!user) {
+        return res.clientError({ msg: 'User not found' });
+      }
+
+      if (!user.otp || user.otp !== otp || !user.otpExpiry || user.otpExpiry < Date.now()) {
         return res.clientError({ msg: 'Invalid or expired OTP' });
       }
 
-      // Clear OTP
-      user.otp = undefined;
-      user.otpExpiry = undefined;
-      await user.save();
+      // Clear OTP using direct update to avoid pre-save hook side effects (like password hashing)
+      await db.user.findByIdAndUpdate(user._id, {
+        $unset: { otp: 1, otpExpiry: 1 }
+      });
 
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);
