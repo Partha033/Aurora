@@ -47,30 +47,40 @@ module.exports = {
       try {
         await sendEmail({
           to: user.email,
-          subject: '✦ Your Aurora Jewels Login Code',
+          subject: '✦ Your Aurora Jewels Verification Code',
           html: `
-            <div style="font-family: 'Playfair Display', serif; max-width: 600px; margin: 0 auto; background-color: #0a0e1a; color: #ffffff; padding: 40px; border-radius: 20px; border: 1px solid #c9a84c;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #c9a84c; font-size: 32px; letter-spacing: 4px; margin: 0;">AURORA JEWELS</h1>
-                <div style="width: 50px; height: 2px; background: #c9a84c; margin: 15px auto;"></div>
-              </div>
-              
-              <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 15px; text-align: center; border: 1px solid rgba(201,168,76,0.2);">
-                <p style="font-size: 18px; color: #e0e0e0; margin-bottom: 25px;">Hello there,</p>
-                <p style="font-size: 16px; color: #b0b0b0; margin-bottom: 30px;">Use the exclusive verification code below to access your account:</p>
-                
-                <div style="background: #161b2b; padding: 20px; border-radius: 10px; border: 2px dashed #c9a84c; display: inline-block; margin-bottom: 30px;">
-                  <span style="font-size: 42px; font-weight: bold; letter-spacing: 12px; color: #c9a84c; font-family: monospace;">${otp}</span>
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #050505; color: #ffffff; padding: 2px; border-radius: 30px; background: linear-gradient(145deg, #c9a84c, #1a1a1a, #c9a84c);">
+              <div style="background-color: #050505; border-radius: 28px; overflow: hidden;">
+                <!-- Header Section -->
+                <div style="padding: 60px 20px 40px; text-align: center; background: radial-gradient(circle at top, #1a1a1a 0%, #050505 100%);">
+                  <h1 style="color: #c9a84c; font-size: 32px; letter-spacing: 8px; margin: 0; text-transform: uppercase; font-weight: 200; font-family: 'Georgia', serif;">AURORA JEWELS</h1>
+                  <div style="width: 40px; height: 1px; background: #c9a84c; margin: 20px auto; opacity: 0.5;"></div>
+                  <p style="color: rgba(201, 168, 76, 0.5); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; margin: 0;">Privé Access</p>
                 </div>
                 
-                <p style="font-size: 14px; color: #888; line-height: 1.6;">
-                  This code is valid for <span style="color: #c9a84c;">10 minutes</span>.<br>
-                  For your security, please do not share this code with anyone.
-                </p>
-              </div>
-              
-              <div style="text-align: center; margin-top: 35px; color: #666; font-size: 12px; letter-spacing: 1px;">
-                <p>© 2026 AURORA JEWELS | EXQUISITE ELEGANCE</p>
+                <!-- Content Section -->
+                <div style="padding: 0 50px 60px; text-align: center;">
+                  <p style="font-size: 16px; color: #888; margin-bottom: 40px; font-weight: 300; line-height: 1.8;">
+                    Welcome to the inner circle. Use this unique signature code to authenticate your session.
+                  </p>
+                  
+                  <div style="background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(201,168,76,0) 100%); border: 1px solid rgba(201,168,76,0.3); padding: 30px; border-radius: 20px; margin-bottom: 40px;">
+                    <span style="font-size: 54px; font-weight: 200; letter-spacing: 15px; color: #ffffff; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 20px rgba(201,168,76,0.3);">${otp}</span>
+                  </div>
+                  
+                  <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; text-align: left;">
+                    <p style="font-size: 12px; color: #555; margin: 0; line-height: 1.6;">
+                      <span style="color: #c9a84c;">●</span> &nbsp; Code expires in 10 minutes<br>
+                      <span style="color: #c9a84c;">●</span> &nbsp; One-time use only<br>
+                      <span style="color: #c9a84c;">●</span> &nbsp; Secure encryption active
+                    </p>
+                  </div>
+                </div>
+                
+                <!-- Footer Section -->
+                <div style="background: #000; padding: 30px; text-align: center;">
+                  <p style="color: #333; font-size: 10px; letter-spacing: 3px; margin: 0;">AURORAJEWELS.COM</p>
+                </div>
               </div>
             </div>
           `,
@@ -88,25 +98,21 @@ module.exports = {
   // ── POST /auth/verify-otp — Verify User OTP ────────────────
   verifyOtp: async (req, res) => {
     try {
-      const { email: rawEmail, otp } = req.body;
-      if (!rawEmail || !otp) return res.clientError({ msg: 'Email and OTP are required' });
+      const { email, otp } = req.body;
+      if (!email || !otp) return res.clientError({ msg: 'Email and OTP are required' });
 
-      const email = rawEmail.trim().toLowerCase();
-      // Explicitly include otp and otpExpiry which are select: false
-      const user = await db.user.findOne({ email }).select('+otp +otpExpiry');
+      const user = await db.user.findOne({ email: email.trim().toLowerCase() }).select('+otp +otpExpiry');
 
-      if (!user) {
-        return res.clientError({ msg: 'User not found' });
-      }
+      if (!user) return res.clientError({ msg: 'User not found' });
 
       if (!user.otp || user.otp !== otp || !user.otpExpiry || user.otpExpiry < Date.now()) {
         return res.clientError({ msg: 'Invalid or expired OTP' });
       }
 
-      // Clear OTP using direct update to avoid pre-save hook side effects (like password hashing)
-      await db.user.findByIdAndUpdate(user._id, {
-        $unset: { otp: 1, otpExpiry: 1 }
-      });
+      // Clear OTP
+      user.otp = undefined;
+      user.otpExpiry = undefined;
+      await user.save({ validateBeforeSave: false });
 
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);
@@ -116,6 +122,7 @@ module.exports = {
         result: { accessToken, user },
       });
     } catch (error) {
+      console.error('[AUTH_VERIFY_ERROR]', error);
       errorHandlerFunction(res, error);
     }
   },
