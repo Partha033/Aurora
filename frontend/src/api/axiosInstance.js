@@ -9,7 +9,9 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
-  baseURL: 'https://aurora-0x5x.onrender.com/api',
+  baseURL: window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api' 
+    : 'https://aurora-0x5x.onrender.com/api',
   withCredentials: true,  // Send HTTP-only refresh token cookie
 });
 

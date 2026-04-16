@@ -46,7 +46,7 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const { data } = await api.post('/verify-otp', { 
+      const { data } = await api.post('/auth/verify-otp', { 
         email: email.trim().toLowerCase(), 
         otp: otp.trim() 
       });

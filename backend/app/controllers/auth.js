@@ -33,9 +33,16 @@ module.exports = {
 
       // User Flow: Send OTP to email
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.otp = otp;
-      user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
-      await user.save();
+      
+      // Update user with OTP using findByIdAndUpdate to bypass select:false issues
+      await db.user.findByIdAndUpdate(user._id, {
+        $set: {
+          otp: otp,
+          otpExpiry: Date.now() + 10 * 60 * 1000 // 10 mins
+        }
+      });
+
+      console.log(`[AUTH] Sending OTP to ${user.email}: ${otp}`);
 
       try {
         await sendEmail({
