@@ -2,10 +2,11 @@
  * App.js — Root application with React Query, React Router, global providers
  */
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import Navbar      from './components/Navbar';
 import Footer      from './components/Footer';
@@ -44,6 +45,56 @@ const PageLoader = () => (
   </div>
 );
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      >
+        <Routes location={location}>
+          {/* Public */}
+          <Route path="/"       element={<HomePage />} />
+          <Route path="/login"  element={<LoginPage />} />
+          <Route path="/shop"   element={<ShopPage />} />
+          <Route path="/shop/:id" element={<ProductDetailsPage />} />
+
+          {/* Protected — requires login */}
+          <Route path="/checkout" element={
+            <ProtectedRoute><CheckoutPage /></ProtectedRoute>
+          } />
+          <Route path="/orders" element={
+            <ProtectedRoute><OrdersPage /></ProtectedRoute>
+          } />
+          <Route path="/orders/:id" element={
+            <ProtectedRoute><OrdersPage /></ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute><ProfilePage /></ProtectedRoute>
+          } />
+
+          {/* Admin only */}
+          <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
+          {/* 404 */}
+          <Route path="*" element={
+            <div className="empty-state" style={{ minHeight: '80vh' }}>
+              <div className="empty-state-icon">✦</div>
+              <h3>Page Not Found</h3>
+              <p>The page you're looking for doesn't exist.</p>
+            </div>
+          } />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -54,39 +105,7 @@ function App() {
 
         <main>
           <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public */}
-              <Route path="/"       element={<HomePage />} />
-              <Route path="/login"  element={<LoginPage />} />
-              <Route path="/shop"   element={<ShopPage />} />
-              <Route path="/shop/:id" element={<ProductDetailsPage />} />
-
-              {/* Protected — requires login */}
-              <Route path="/checkout" element={
-                <ProtectedRoute><CheckoutPage /></ProtectedRoute>
-              } />
-              <Route path="/orders" element={
-                <ProtectedRoute><OrdersPage /></ProtectedRoute>
-              } />
-              <Route path="/orders/:id" element={
-                <ProtectedRoute><OrdersPage /></ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute><ProfilePage /></ProtectedRoute>
-              } />
-
-              {/* Admin only */}
-              <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
-
-              {/* 404 */}
-              <Route path="*" element={
-                <div className="empty-state" style={{ minHeight: '80vh' }}>
-                  <div className="empty-state-icon">✦</div>
-                  <h3>Page Not Found</h3>
-                  <p>The page you're looking for doesn't exist.</p>
-                </div>
-              } />
-            </Routes>
+            <AnimatedRoutes />
           </Suspense>
         </main>
 
@@ -113,5 +132,7 @@ function App() {
     </QueryClientProvider>
   );
 }
+
+export default App;
 
 export default App;

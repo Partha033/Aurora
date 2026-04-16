@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { ShoppingBag, Eye, Heart, Sparkles } from 'lucide-react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 const ProductCard = ({ product }) => {
   const { isAuthenticated } = useAuthStore();
@@ -31,12 +32,22 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 transition-all duration-500 hover:shadow-2xl hover:shadow-gold/10 flex flex-col h-full">
+    <motion.div 
+      whileHover={{ y: -10, rotateX: 2, rotateY: 2 }}
+      transition={{ type: "spring", stiffness: 300 }}
+      className="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 transition-all duration-500 hover:shadow-2xl hover:shadow-gold/10 flex flex-col h-full"
+    >
       {/* Image Container */}
       <Link to={`/shop/${_id}`} className="relative aspect-[4/5] overflow-hidden bg-slate-50 block">
         {image
-          ? <img src={image} alt={name} loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          ? <motion.img 
+              src={image} 
+              alt={name} 
+              loading="lazy"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+              className="w-full h-full object-cover" 
+            />
           : <div className="w-full h-full flex items-center justify-center bg-cream/30">
               <Sparkles className="text-gold/20 w-12 h-12" />
             </div>
@@ -58,22 +69,34 @@ const ProductCard = ({ product }) => {
 
         {/* Hover Actions */}
         <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 z-20">
-          <button className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 shadow-xl">
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 shadow-xl"
+          >
             <Heart size={18} />
-          </button>
-          <Link to={`/shop/${_id}`} className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 delay-75 shadow-xl">
-            <Eye size={18} />
+          </motion.button>
+          <Link to={`/shop/${_id}`}>
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 translate-y-4 group-hover:translate-y-0 delay-75 shadow-xl"
+            >
+              <Eye size={18} />
+            </motion.div>
           </Link>
         </div>
 
         {/* Quick Add Button */}
         {!isOutOfStock && (
-          <button
+          <motion.button
             onClick={handleAddToCart}
-            className="absolute bottom-0 left-0 right-0 py-4 bg-gold text-navy font-bold text-xs uppercase tracking-[0.2em] translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-30 flex items-center justify-center gap-2"
+            initial={{ y: "100%" }}
+            whileHover={{ y: 0 }}
+            className="absolute bottom-0 left-0 right-0 py-4 bg-gold text-navy font-bold text-xs uppercase tracking-[0.2em] group-hover:translate-y-0 transition-transform duration-300 z-30 flex items-center justify-center gap-2"
           >
             <ShoppingBag size={14} /> Quick Add
-          </button>
+          </motion.button>
         )}
       </Link>
 
@@ -81,9 +104,6 @@ const ProductCard = ({ product }) => {
       <div className="p-5 flex flex-col flex-1 bg-white">
         <div className="flex justify-between items-start mb-2">
           <span className="text-[10px] uppercase tracking-widest text-gold-dark font-bold">{category}</span>
-          <div className="flex items-center gap-0.5 text-amber-400">
-             {/* Simple stars or rating can go here if needed */}
-          </div>
         </div>
         
         <Link to={`/shop/${_id}`} className="block mb-3 flex-1">
@@ -101,8 +121,10 @@ const ProductCard = ({ product }) => {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
+
+export default ProductCard;
 
 export default ProductCard;
