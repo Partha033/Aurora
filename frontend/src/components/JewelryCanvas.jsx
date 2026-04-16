@@ -8,7 +8,6 @@ import {
   ContactShadows,
   PerspectiveCamera
 } from '@react-three/drei';
-import * as THREE from 'three';
 
 const Gemstone = () => {
   const meshRef = useRef();
