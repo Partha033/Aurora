@@ -8,7 +8,7 @@ import {
   Plus, Search, LayoutGrid, List, Pencil, Trash2, Eye, EyeOff, 
   Package, CheckCircle2, XCircle, AlertTriangle, X, Camera, 
   Gem, Dna, Sparkles, Disc, CircleDot, Layers, 
-  ChevronRight, Globe, Lock, Image as ImageIcon, Info, Check
+  Globe, Lock, Image as ImageIcon, Info, Check
 } from 'lucide-react';
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
