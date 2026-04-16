@@ -4,10 +4,24 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { 
+  Plus, Search, LayoutGrid, List, Pencil, Trash2, Eye, EyeOff, 
+  Package, CheckCircle2, XCircle, AlertTriangle, X, Camera, 
+  Gem, Dna, Sparkles, Disc, CircleDot, Layers, 
+  ChevronRight, Globe, Lock, Image as ImageIcon, Info, Check
+} from 'lucide-react';
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
 const CATEGORIES = ['rings','necklaces','earrings','bracelets','pendants','sets','other'];
-const CAT_ICONS  = { rings:'💍', necklaces:'📿', earrings:'👂', bracelets:'⌚', pendants:'🔮', sets:'✨', other:'📦' };
+const CAT_ICONS  = { 
+  rings: <Gem size={18} />, 
+  necklaces: <Dna size={18} />, 
+  earrings: <Sparkles size={18} />, 
+  bracelets: <Disc size={18} />, 
+  pendants: <CircleDot size={18} />, 
+  sets: <Layers size={18} />, 
+  other: <Package size={18} /> 
+};
 
 /* ── Product Form Modal ─────────────────────────────────────────────────── */
 const ProductFormModal = ({ product, onClose }) => {
@@ -71,7 +85,7 @@ const ProductFormModal = ({ product, onClose }) => {
       const cfg = { headers: { 'Content-Type': 'multipart/form-data' } };
       if (isEdit) await api.put(`/product/${product._id}`, fd, cfg);
       else        await api.post('/product', fd, cfg);
-      toast.success(isEdit ? '✦ Product updated!' : '✦ Product created!');
+      toast.success(isEdit ? 'Product updated!' : 'Product created!');
       qc.invalidateQueries(['admin-products-page']);
       qc.invalidateQueries(['admin-dashboard-data']);
       onClose();
@@ -97,9 +111,14 @@ const ProductFormModal = ({ product, onClose }) => {
         <div className={`px-8 py-6 flex items-center justify-between flex-shrink-0 ${isEdit ? 'bg-gradient-to-r from-navy to-navy-mid' : 'bg-gradient-to-r from-[#1a0a2e] to-navy'}`}>
           <div>
             <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">{isEdit ? 'Editing Product' : 'New Product'}</p>
-            <h2 className="text-white font-serif text-xl">{isEdit ? product.name : '✦ Add to Catalogue'}</h2>
+            <h2 className="text-white font-serif text-xl flex items-center gap-2">
+              {!isEdit && <Plus size={20} className="text-gold" />}
+              {isEdit ? product.name : 'Add to Catalogue'}
+            </h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 text-white/60 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors text-sm">✕</button>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 text-white/60 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors text-sm">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Step indicator */}
@@ -121,11 +140,11 @@ const ProductFormModal = ({ product, onClose }) => {
             {step === 1 && (
               <>
                 <div>
-                  <label className="form-label mb-2 block">Product Name <span className="text-red-400">*</span></label>
+                  <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Product Name <span className="text-red-400">*</span></label>
                   <input name="name" className="form-input" placeholder="e.g. 22K Gold Bangle" value={form.name} onChange={set} required />
                 </div>
                 <div>
-                  <label className="form-label mb-2 block">Category <span className="text-red-400">*</span></label>
+                  <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Category <span className="text-red-400">*</span></label>
                   <div className="grid grid-cols-4 gap-2">
                     {CATEGORIES.map(c => (
                       <button key={c} type="button" onClick={() => setForm(p => ({ ...p, category: c }))}
@@ -139,7 +158,7 @@ const ProductFormModal = ({ product, onClose }) => {
                   </div>
                 </div>
                 <div>
-                  <label className="form-label mb-2 block">Description <span className="text-red-400">*</span></label>
+                  <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Description <span className="text-red-400">*</span></label>
                   <textarea name="description" className="form-input resize-none" rows={4}
                     placeholder="Describe the product — material, design, occasion…"
                     value={form.description} onChange={set} required />
@@ -151,9 +170,14 @@ const ProductFormModal = ({ product, onClose }) => {
                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                     <input name="isActive" type="checkbox" className="hidden" checked={form.isActive} onChange={set} />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-navy">{form.isActive ? '● Published — visible in shop' : '○ Hidden — not visible in shop'}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Toggle to control customer visibility</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${form.isActive ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}`}>
+                      {form.isActive ? <Globe size={16} /> : <Lock size={16} />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-navy">{form.isActive ? 'Published — visible in shop' : 'Hidden — not visible in shop'}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Toggle to control customer visibility</p>
+                    </div>
                   </div>
                 </label>
               </>
@@ -164,14 +188,14 @@ const ProductFormModal = ({ product, onClose }) => {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="form-label mb-2 block">Original Price (₹) <span className="text-red-400">*</span></label>
+                    <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Original Price (₹) <span className="text-red-400">*</span></label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
                       <input name="price" type="number" min="0" step="0.01" className="form-input !pl-8" placeholder="0" value={form.price} onChange={set} required />
                     </div>
                   </div>
                   <div>
-                    <label className="form-label mb-2 block">Sale Price (₹)</label>
+                    <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Sale Price (₹)</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
                       <input name="discountedPrice" type="number" min="0" step="0.01" className="form-input !pl-8" placeholder="Optional" value={form.discountedPrice} onChange={set} />
@@ -181,7 +205,7 @@ const ProductFormModal = ({ product, onClose }) => {
 
                 {/* Discount preview */}
                 {discountPct > 0 ? (
-                  <div className="rounded-2xl overflow-hidden">
+                  <div className="rounded-2xl overflow-hidden shadow-sm">
                     <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-4 flex items-center gap-4">
                       <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                         <span className="text-white font-black text-lg">{discountPct}%</span>
@@ -203,12 +227,13 @@ const ProductFormModal = ({ product, onClose }) => {
                 )}
 
                 <div>
-                  <label className="form-label mb-2 block">Stock Quantity <span className="text-red-400">*</span></label>
+                  <label className="form-label mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Stock Quantity <span className="text-red-400">*</span></label>
                   <input name="stock" type="number" min="0" className="form-input" placeholder="0" value={form.stock} onChange={set} required />
                   {/* Stock status indicator */}
                   {form.stock !== '' && (
                     <div className={`flex items-center gap-1.5 mt-2 text-xs font-medium ${Number(form.stock) === 0 ? 'text-red-500' : Number(form.stock) <= 5 ? 'text-amber-500' : 'text-green-600'}`}>
-                      <span>{Number(form.stock) === 0 ? '⚠️ Out of stock' : Number(form.stock) <= 5 ? '⚠️ Low stock — will show warning' : '✓ Good stock level'}</span>
+                      {Number(form.stock) === 0 ? <XCircle size={14} /> : Number(form.stock) <= 5 ? <AlertTriangle size={14} /> : <Check size={14} />}
+                      <span>{Number(form.stock) === 0 ? 'Out of stock' : Number(form.stock) <= 5 ? 'Low stock — will show warning' : 'Good stock level'}</span>
                     </div>
                   )}
                 </div>
@@ -231,7 +256,7 @@ const ProductFormModal = ({ product, onClose }) => {
               <>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="form-label">
+                    <label className="form-label text-xs font-bold uppercase tracking-wider text-slate-500">
                       Product Images {!isEdit && <span className="text-red-400">*</span>}
                     </label>
                     <span className="text-[11px] text-slate-400">{previews.length}/5 uploaded</span>
@@ -240,7 +265,9 @@ const ProductFormModal = ({ product, onClose }) => {
                   {/* Upload area */}
                   <label className="block cursor-pointer mb-4">
                     <div className="border-2 border-dashed border-slate-200 hover:border-gold rounded-2xl p-8 text-center transition-all group hover:bg-gold/5">
-                      <div className="text-5xl text-slate-200 group-hover:text-gold transition-colors mb-3">📷</div>
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-gold group-hover:text-white transition-all mx-auto mb-3">
+                        <Camera size={32} />
+                      </div>
                       <p className="text-sm font-medium text-slate-500 group-hover:text-navy">Click to add images</p>
                       <p className="text-xs text-slate-300 mt-1">PNG, JPG, WEBP · max 5MB each · up to 5 images</p>
                     </div>
@@ -255,9 +282,11 @@ const ProductFormModal = ({ product, onClose }) => {
                           <img src={src} alt="" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button type="button" onClick={() => removeImg(i)}
-                              className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600">✕</button>
+                              className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600">
+                              <X size={14} />
+                            </button>
                           </div>
-                          {i === 0 && <span className="absolute top-1.5 left-1.5 bg-gold text-navy text-[9px] font-bold px-1.5 py-0.5 rounded-full">Main</span>}
+                          {i === 0 && <span className="absolute top-1.5 left-1.5 bg-gold text-navy text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">Main</span>}
                         </div>
                       ))}
                     </div>
@@ -266,7 +295,9 @@ const ProductFormModal = ({ product, onClose }) => {
 
                 {/* Tips */}
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-blue-700 mb-2">📸 Image Tips</p>
+                  <p className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                    <Info size={14} /> Image Tips
+                  </p>
                   <ul className="text-xs text-blue-600 space-y-1 list-disc list-inside">
                     <li>Use square images (1:1) for best results</li>
                     <li>First image becomes the product thumbnail</li>
@@ -288,7 +319,7 @@ const ProductFormModal = ({ product, onClose }) => {
               {step < 3
                 ? <button type="button" onClick={() => setStep(s => s + 1)} className="btn btn-primary text-sm gap-2">Next step →</button>
                 : <button type="submit" disabled={loading} className="btn btn-primary gap-2 min-w-[160px] justify-center text-sm">
-                    {loading ? <><div className="spinner spinner-sm" /> {isEdit ? 'Saving…' : 'Creating…'}</> : isEdit ? '✓ Save Changes' : '✦ Create Product'}
+                    {loading ? <><div className="spinner spinner-sm" /> {isEdit ? 'Saving…' : 'Creating…'}</> : isEdit ? <><Check size={18} /> Save Changes</> : <><Plus size={18} /> Create Product</>}
                   </button>
               }
             </div>
@@ -302,9 +333,11 @@ const ProductFormModal = ({ product, onClose }) => {
 /* ── Delete Confirm Modal ─────────────────────────────────────────────────  */
 const DeleteModal = ({ product, onClose, onConfirm }) => (
   <div className="fixed inset-0 z-[300] bg-navy/60 flex items-center justify-center p-6" onClick={onClose}>
-    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
       <div className="p-7 text-center">
-        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">🗑️</div>
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 size={32} />
+        </div>
         <h3 className="font-serif text-xl text-navy mb-2">Delete Product?</h3>
         <p className="text-sm text-slate-500 mb-1">You are about to delete</p>
         <p className="font-semibold text-navy mb-5">"{product.name}"</p>
@@ -359,7 +392,7 @@ const AdminProductsPage = () => {
   const toggleMutation = useMutation({
     mutationFn: id => api.patch(`/product/${id}/toggle`),
     onSuccess: res => { 
-      toast.success(res.data.result.isActive ? 'Product published ✦' : 'Product hidden'); 
+      toast.success(res.data.result.isActive ? 'Product published' : 'Product hidden'); 
       qc.invalidateQueries(['admin-products-page']); 
       qc.invalidateQueries(['admin-dashboard-data']);
     },
@@ -381,7 +414,7 @@ const AdminProductsPage = () => {
   };
 
   return (
-    <div className="bg-slate-50">
+    <div className="bg-slate-50 min-h-screen">
       {/* ── Page Header ── */}
       <div className="bg-navy shadow-xl">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-7 flex flex-wrap items-center justify-between gap-4">
@@ -389,67 +422,67 @@ const AdminProductsPage = () => {
             <Link to="/admin" className="text-white/30 hover:text-white/70 transition-colors text-sm">← Dashboard</Link>
             <span className="text-white/20">/</span>
             <div>
-              <h1 className="font-serif text-2xl text-gold-light">Product Management</h1>
+              <h1 className="font-serif text-2xl text-gold-light tracking-wide">Product Management</h1>
               <p className="text-xs text-white/40 mt-0.5">Add, edit and manage your jewellery catalogue</p>
             </div>
           </div>
-          <button onClick={() => setModal({})} className="btn btn-primary shadow-lg shadow-gold/20 gap-2">
-            <span className="text-lg leading-none font-light">+</span> Add New Product
+          <button onClick={() => setModal({})} className="btn btn-primary shadow-lg shadow-gold/20 gap-2 font-bold uppercase tracking-widest text-[10px] py-3.5">
+            <Plus size={16} /> Add New Product
           </button>
         </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         {/* ── Stats Row ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
           {[
-            { label: 'Total Products', val: stats.total,      icon: '💍', bg: 'bg-white',     text: 'text-navy'       },
-            { label: 'Published',      val: stats.active,     icon: '✅', bg: 'bg-green-50',  text: 'text-green-700'  },
-            { label: 'Hidden',         val: stats.hidden,     icon: '🚫', bg: 'bg-slate-100', text: 'text-slate-600'  },
-            { label: 'Out of Stock',   val: stats.outOfStock, icon: '❌', bg: 'bg-red-50',    text: 'text-red-600'    },
-            { label: 'Low Stock',      val: stats.lowStock,   icon: '⚠️', bg: 'bg-amber-50',  text: 'text-amber-700'  },
-          ].map(({ label, val, icon, bg, text }) => (
-            <div key={label} className={`${bg} rounded-2xl p-4 flex items-center gap-3 border border-black/[0.05] shadow-sm`}>
-              <span className="text-2xl">{icon}</span>
+            { label: 'Total Products', val: stats.total,      icon: <Package size={22} />,      bg: 'bg-white',     text: 'text-navy', border: 'border-slate-100' },
+            { label: 'Published',      val: stats.active,     icon: <CheckCircle2 size={22} />, bg: 'bg-white',     text: 'text-green-600', border: 'border-green-100' },
+            { label: 'Hidden',         val: stats.hidden,     icon: <EyeOff size={22} />,       bg: 'bg-white',     text: 'text-slate-500', border: 'border-slate-200' },
+            { label: 'Out of Stock',   val: stats.outOfStock, icon: <XCircle size={22} />,      bg: 'bg-white',     text: 'text-red-500', border: 'border-red-100' },
+            { label: 'Low Stock',      val: stats.lowStock,   icon: <AlertTriangle size={22} />, bg: 'bg-white',     text: 'text-amber-600', border: 'border-amber-100' },
+          ].map(({ label, val, icon, bg, text, border }) => (
+            <div key={label} className={`${bg} rounded-2xl p-5 flex items-center gap-4 border ${border} shadow-sm transition-all hover:shadow-md`}>
+              <div className={`${text} opacity-80`}>{icon}</div>
               <div>
-                <p className={`text-xl font-bold ${text}`}>{val}</p>
-                <p className="text-[10px] text-slate-400 font-medium">{label}</p>
+                <p className={`text-xl font-black ${text}`}>{val}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{label}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* ── Toolbar row ── */}
-        <div className="flex flex-wrap gap-3 items-center mb-5">
+        <div className="flex flex-wrap gap-4 items-center mb-6">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input className="form-input !pl-10 !py-2.5 text-sm shadow-sm" placeholder="Search products…"
+          <div className="relative flex-1 min-w-[280px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input className="form-input !pl-11 !py-3 text-sm shadow-sm bg-white border-slate-200" placeholder="Search products by name or category…"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           {/* Sort */}
-          <select className="form-input w-44 !py-2.5 text-sm shadow-sm" value={sortBy} onChange={e => setSort(e.target.value)}>
+          <select className="form-input w-48 !py-3 text-sm shadow-sm bg-white border-slate-200" value={sortBy} onChange={e => setSort(e.target.value)}>
             <option value="newest">Newest First</option>
             <option value="price_asc">Price: Low → High</option>
             <option value="price_desc">Price: High → Low</option>
           </select>
           {/* View toggle */}
-          <div className="flex rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+          <div className="flex bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm p-1">
             <button onClick={() => setView('grid')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${viewMode === 'grid' ? 'bg-navy text-white' : 'bg-white text-slate-400 hover:text-navy'}`}>
-              ⊞ Grid
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-navy text-white shadow-md' : 'text-slate-400 hover:text-navy hover:bg-slate-50'}`}>
+              <LayoutGrid size={18} />
             </button>
             <button onClick={() => setView('table')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${viewMode === 'table' ? 'bg-navy text-white' : 'bg-white text-slate-400 hover:text-navy'}`}>
-              ☰ Table
+              className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-navy text-white shadow-md' : 'text-slate-400 hover:text-navy hover:bg-slate-50'}`}>
+              <List size={18} />
             </button>
           </div>
         </div>
 
         {/* ── Category pill filters ── */}
-        <div className="flex gap-2 flex-wrap mb-7">
+        <div className="flex gap-2.5 flex-wrap mb-8">
           <button onClick={() => setCat('')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${!catFilter ? 'bg-navy text-gold-light border-navy shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:border-navy hover:text-navy'}`}>
+            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${!catFilter ? 'bg-navy text-gold-light border-navy shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:border-navy hover:text-navy'}`}>
             All ({allProducts.length})
           </button>
           {CATEGORIES.map(c => {
@@ -457,11 +490,12 @@ const AdminProductsPage = () => {
             if (!cnt && catFilter !== c) return null;
             return (
               <button key={c} onClick={() => setCat(c === catFilter ? '' : c)}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+                className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all flex items-center gap-2 ${
                   catFilter === c ? 'bg-gold text-navy border-gold shadow-md shadow-gold/20' : 'bg-white border-slate-200 text-slate-500 hover:border-gold hover:text-gold-dark'
                 }`}>
-                {CAT_ICONS[c]} {c.charAt(0).toUpperCase() + c.slice(1)}
-                <span className={`text-[9px] rounded-full px-1.5 py-0.5 ${catFilter === c ? 'bg-white/30' : 'bg-slate-100'}`}>{cnt}</span>
+                <span className="opacity-70">{CAT_ICONS[c]}</span>
+                {c}
+                <span className={`text-[10px] rounded-full px-2 py-0.5 ml-1 ${catFilter === c ? 'bg-navy/10' : 'bg-slate-100'}`}>{cnt}</span>
               </button>
             );
           })}
@@ -469,103 +503,107 @@ const AdminProductsPage = () => {
 
         {/* ── Content ── */}
         {isLoading ? (
-          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))' }}>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))' }}>
             {Array(8).fill(0).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl overflow-hidden border border-slate-100 animate-pulse">
-                <div className="h-56 bg-slate-100" />
-                <div className="p-4 flex flex-col gap-2">
-                  <div className="h-4 bg-slate-100 rounded w-3/4" /><div className="h-3 bg-slate-50 rounded w-1/2" />
+                <div className="h-60 bg-slate-100" />
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="h-5 bg-slate-100 rounded w-3/4" /><div className="h-4 bg-slate-50 rounded w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : allProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-black/[0.06] py-24 text-center shadow-sm">
-            <p className="text-6xl mb-5">💍</p>
+          <div className="bg-white rounded-3xl border border-black/[0.06] py-24 text-center shadow-sm">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+              <Gem size={40} />
+            </div>
             <h3 className="font-serif text-2xl text-navy mb-2">No products found</h3>
-            <p className="text-slate-400 text-sm mb-8">{search || catFilter ? 'Try different search or filters' : 'Start by adding your first product'}</p>
+            <p className="text-slate-400 text-sm mb-8">{search || catFilter ? 'Try different search or filters' : 'Start by adding your first product to the catalogue'}</p>
             {!search && !catFilter && (
-              <button onClick={() => setModal({})} className="btn btn-primary gap-2">✦ Add First Product</button>
+              <button onClick={() => setModal({})} className="btn btn-primary gap-3 px-8">
+                <Plus size={18} /> Add First Product
+              </button>
             )}
           </div>
 
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
-          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))' }}>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))' }}>
             {allProducts.map(p => (
               <div key={p._id}
-                className={`group relative bg-white rounded-2xl overflow-hidden border border-black/[0.06] shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 ${!p.isActive ? 'opacity-55 grayscale-[40%]' : ''}`}>
+                className={`group relative bg-white rounded-2xl overflow-hidden border border-black/[0.06] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${!p.isActive ? 'opacity-60 grayscale-[40%]' : ''}`}>
                 {/* Image */}
-                <div className="relative h-56 bg-cream overflow-hidden">
+                <div className="relative h-60 bg-slate-50 overflow-hidden">
                   {p.images?.[0]?.url
-                    ? <img src={p.images[0].url} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    : <div className="w-full h-full flex items-center justify-center text-6xl text-gold/20">✦</div>
+                    ? <img src={p.images[0].url} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    : <div className="w-full h-full flex items-center justify-center text-gold/20"><Sparkles size={60} strokeWidth={1} /></div>
                   }
                   {/* Hover action overlay */}
-                  <div className="absolute inset-0 bg-navy/75 opacity-0 group-hover:opacity-100 transition-opacity duration-250 flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-navy/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                     <button onClick={() => setModal(p)}
-                      className="bg-white text-navy text-xs font-semibold px-4 py-2 rounded-xl hover:bg-gold hover:text-white transition-colors shadow-lg">
-                      ✏ Edit
+                      className="bg-white text-navy p-3 rounded-xl hover:bg-gold hover:text-white transition-all shadow-xl" title="Edit Product">
+                      <Pencil size={18} />
                     </button>
                     <button onClick={() => toggleMutation.mutate(p._id)} disabled={toggleMutation.isPending}
-                      className={`text-xs font-semibold px-3 py-2 rounded-xl shadow-lg transition-colors ${p.isActive ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-green-500 text-white hover:bg-green-600'}`}>
-                      {p.isActive ? '🚫' : '👁'}
+                      className={`p-3 rounded-xl shadow-xl transition-all ${p.isActive ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-green-500 text-white hover:bg-green-600'}`}
+                      title={p.isActive ? 'Hide Product' : 'Publish Product'}>
+                      {p.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                     <button onClick={() => setDelete(p)}
-                      className="bg-red-500 text-white text-xs font-semibold p-2 rounded-xl hover:bg-red-600 transition-colors shadow-lg">
-                      🗑
+                      className="bg-red-500 text-white p-3 rounded-xl hover:bg-red-600 transition-all shadow-xl" title="Delete Product">
+                      <Trash2 size={18} />
                     </button>
                   </div>
                   {/* Status badges */}
-                  <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 pointer-events-none">
-                    {!p.isActive          && <span className="bg-slate-800/90 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">Hidden</span>}
-                    {p.discountPercent > 0 && <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{p.discountPercent}% OFF</span>}
-                    {p.stock === 0         && <span className="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Out of Stock</span>}
-                    {p.stock > 0 && p.stock <= 5 && <span className="bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Low Stock</span>}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
+                    {!p.isActive          && <span className="bg-slate-900/80 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg">Hidden</span>}
+                    {p.discountPercent > 0 && <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow-lg shadow-green-500/20">{p.discountPercent}% OFF</span>}
+                    {p.stock === 0         && <span className="bg-red-500 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg shadow-red-500/20">Out of Stock</span>}
+                    {p.stock > 0 && p.stock <= 5 && <span className="bg-amber-500 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg shadow-amber-500/20">Low Stock</span>}
                   </div>
-                  {/* Image count */}
+                  {/* Image count indicator */}
                   {p.images?.length > 1 && (
-                    <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-                      +{p.images.length - 1} more
-                    </span>
+                    <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
+                      <ImageIcon size={10} /> {p.images.length}
+                    </div>
                   )}
                 </div>
 
                 {/* Card body */}
-                <div className="p-4">
-                  <span className="text-[9px] uppercase tracking-widest text-gold-dark font-semibold">
-                    {CAT_ICONS[p.category]} {p.category}
-                  </span>
-                  <h3 className="font-serif font-semibold text-navy text-base mt-0.5 leading-snug line-clamp-1">{p.name}</h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{p.description}</p>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
+                <div className="p-5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-gold-dark opacity-70">{CAT_ICONS[p.category]}</span>
+                    <span className="text-[9px] uppercase tracking-[0.2em] text-gold-dark font-bold">
+                      {p.category}
+                    </span>
+                  </div>
+                  <h3 className="font-serif font-bold text-navy text-base mt-1 leading-tight line-clamp-1 group-hover:text-gold-dark transition-colors">{p.name}</h3>
+                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed h-8">{p.description}</p>
+                  
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
                     <div>
-                      <p className="font-bold text-navy">₹{(p.discountedPrice || p.price).toLocaleString('en-IN')}</p>
-                      {p.discountedPrice && <p className="text-[11px] text-slate-400 line-through">₹{p.price.toLocaleString('en-IN')}</p>}
+                      <p className="font-black text-navy text-lg">₹{(p.discountedPrice || p.price).toLocaleString('en-IN')}</p>
+                      {p.discountedPrice && <p className="text-[10px] text-slate-400 line-through font-medium">₹{p.price.toLocaleString('en-IN')}</p>}
                     </div>
                     <div className="text-right">
-                      <p className={`text-xs font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
-                        {p.stock} in stock
+                      <p className={`text-[10px] font-bold uppercase tracking-wider ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
+                        {p.stock === 0 ? 'Out of stock' : `${p.stock} units`}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom quick-action row */}
-                <div className="border-t border-slate-50 flex">
+                <div className="border-t border-slate-50 flex bg-slate-50/50">
                   <button onClick={() => setModal(p)}
-                    className="flex-1 py-2.5 text-xs text-navy font-medium hover:bg-gold/10 hover:text-gold-dark transition-colors">
+                    className="flex-1 py-3 text-[10px] text-navy font-bold uppercase tracking-wider hover:bg-white hover:text-gold-dark transition-all">
                     Edit
                   </button>
                   <div className="w-px bg-slate-100" />
                   <button onClick={() => toggleMutation.mutate(p._id)}
-                    className={`flex-1 py-2.5 text-xs font-medium transition-colors ${p.isActive ? 'text-slate-400 hover:bg-slate-50' : 'text-green-600 hover:bg-green-50'}`}>
+                    className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wider transition-all ${p.isActive ? 'text-slate-400 hover:bg-white' : 'text-green-600 hover:bg-green-50'}`}>
                     {p.isActive ? 'Hide' : 'Publish'}
-                  </button>
-                  <div className="w-px bg-slate-100" />
-                  <button onClick={() => setDelete(p)}
-                    className="flex-1 py-2.5 text-xs text-red-400 font-medium hover:bg-red-50 hover:text-red-600 transition-colors">
-                    Delete
                   </button>
                 </div>
               </div>
@@ -574,73 +612,79 @@ const AdminProductsPage = () => {
 
         ) : (
           /* ── TABLE VIEW ── */
-          <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-navy">
-                  {['','Product','Category','Price','Discount','Stock','Visibility','Actions'].map(h => (
-                    <th key={h} className="px-4 py-4 text-left text-[10px] uppercase tracking-widest text-gold-light font-semibold whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allProducts.map(p => (
-                  <tr key={p._id} className={`border-t border-slate-50 hover:bg-slate-50/60 transition-colors ${!p.isActive ? 'opacity-55' : ''}`}>
-                    <td className="pl-4 pr-2 py-3 w-16">
-                      {p.images?.[0]?.url
-                        ? <img src={p.images[0].url} alt={p.name} className="w-14 h-14 rounded-xl object-cover border border-slate-100" />
-                        : <div className="w-14 h-14 rounded-xl bg-cream flex items-center justify-center text-gold text-xl border border-slate-100">✦</div>
-                      }
-                    </td>
-                    <td className="px-3 py-3 max-w-[220px]">
-                      <p className="font-semibold text-navy truncate text-sm">{p.name}</p>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">{p.description?.slice(0, 55)}…</p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-1 bg-gold/10 text-gold-dark text-[10px] font-semibold px-2.5 py-1 rounded-full capitalize whitespace-nowrap">
-                        {CAT_ICONS[p.category]} {p.category}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <p className="font-semibold text-navy">₹{p.price.toLocaleString('en-IN')}</p>
-                      {p.discountedPrice && <p className="text-[11px] text-green-600">₹{p.discountedPrice.toLocaleString('en-IN')}</p>}
-                    </td>
-                    <td className="px-3 py-3">
-                      {p.discountPercent > 0
-                        ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full">{p.discountPercent}% OFF</span>
-                        : <span className="text-slate-300 text-xs">—</span>}
-                    </td>
-                    <td className="px-3 py-3">
-                      <p className={`font-bold text-sm ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-amber-500' : 'text-navy'}`}>{p.stock}</p>
-                      {p.stock === 0 && <p className="text-[10px] text-red-400">Out of stock</p>}
-                      {p.stock > 0 && p.stock <= 5 && <p className="text-[10px] text-amber-400">Low stock</p>}
-                    </td>
-                    <td className="px-3 py-3">
-                      <button onClick={() => toggleMutation.mutate(p._id)} disabled={toggleMutation.isPending}
-                        className={`text-[10px] font-semibold px-3 py-1.5 rounded-full cursor-pointer transition-all border ${
-                          p.isActive ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                        }`}>
-                        {p.isActive ? '● Live' : '○ Hidden'}
-                      </button>
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex gap-2">
-                        <button onClick={() => setModal(p)}
-                          className="px-3 py-1.5 text-xs border border-slate-200 text-navy rounded-lg hover:border-gold hover:text-gold transition-colors font-medium">
-                          Edit
-                        </button>
-                        <button onClick={() => setDelete(p)}
-                          className="px-3 py-1.5 text-xs bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors font-medium">
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+          <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-navy border-b border-white/5">
+                    {['','Product','Category','Price','Discount','Stock','Visibility','Actions'].map((h, i) => (
+                      <th key={h} className={`px-5 py-4 text-left text-[10px] uppercase tracking-widest text-gold-light font-bold ${i === 0 ? 'w-20' : ''}`}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
-              Showing {allProducts.length} product{allProducts.length !== 1 && 's'}
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {allProducts.map(p => (
+                    <tr key={p._id} className={`hover:bg-slate-50/80 transition-colors ${!p.isActive ? 'opacity-60 bg-slate-50/30' : ''}`}>
+                      <td className="px-5 py-4">
+                        {p.images?.[0]?.url
+                          ? <img src={p.images[0].url} alt={p.name} className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm" />
+                          : <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-gold/40 border border-slate-200"><Sparkles size={20} /></div>
+                        }
+                      </td>
+                      <td className="px-5 py-4 max-w-[280px]">
+                        <p className="font-bold text-navy truncate text-sm">{p.name}</p>
+                        <p className="text-[11px] text-slate-400 truncate mt-0.5">{p.description}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-2 bg-slate-100 text-navy text-[10px] font-bold px-3 py-1.5 rounded-full capitalize whitespace-nowrap">
+                          <span className="opacity-60">{CAT_ICONS[p.category]}</span>
+                          {p.category}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="font-bold text-navy">₹{p.price.toLocaleString('en-IN')}</p>
+                        {p.discountedPrice && <p className="text-[11px] text-green-600 font-medium">₹{p.discountedPrice.toLocaleString('en-IN')}</p>}
+                      </td>
+                      <td className="px-5 py-4">
+                        {p.discountPercent > 0
+                          ? <span className="bg-green-100 text-green-700 text-[10px] font-black px-2.5 py-1 rounded-md">{p.discountPercent}% OFF</span>
+                          : <span className="text-slate-300 font-light">—</span>}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <p className={`font-black text-sm ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-amber-500' : 'text-navy'}`}>{p.stock}</p>
+                          {p.stock === 0 && <span className="p-1 bg-red-50 text-red-500 rounded"><XCircle size={10} /></span>}
+                          {p.stock > 0 && p.stock <= 5 && <span className="p-1 bg-amber-50 text-amber-500 rounded"><AlertTriangle size={10} /></span>}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <button onClick={() => toggleMutation.mutate(p._id)} disabled={toggleMutation.isPending}
+                          className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all ${
+                            p.isActive ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                          }`}>
+                          {p.isActive ? <Globe size={12} /> : <Lock size={12} />}
+                          {p.isActive ? 'Live' : 'Hidden'}
+                        </button>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => setModal(p)}
+                            className="p-2 text-slate-400 hover:text-gold hover:bg-gold/5 rounded-lg transition-all" title="Edit">
+                            <Pencil size={16} />
+                          </button>
+                          <button onClick={() => setDelete(p)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+              {allProducts.length} Product{allProducts.length !== 1 && 's'} in Catalogue
             </div>
           </div>
         )}
