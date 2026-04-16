@@ -12,28 +12,49 @@ const LoginPage = () => {
 
   useEffect(() => { if (isAuthenticated) navigate(from, { replace: true }); }, [isAuthenticated, navigate, from]);
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [name,    setName]    = useState('');
   const [email,   setEmail]   = useState('');
-  const [password,setPassword] = useState('');
+  const [otp,     setOtp]     = useState('');
+  const [step,    setStep]    = useState(1); // 1: Email, 2: OTP
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return toast.error('Please fill in all fields');
-    if (!isLogin && !name.trim()) return toast.error('Please enter your name');
+    if (!email.trim()) return toast.error('Please enter your email');
     
     setLoading(true);
     try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/register';
-      const payload = isLogin ? { email: email.trim().toLowerCase(), password } : { email: email.trim().toLowerCase(), password, name: name.trim() };
+      const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase() });
       
-      const { data } = await api.post(endpoint, payload);
+      if (data.result?.user?.role === 'admin') {
+        // Admin: Direct login
+        setTokens(data.result.accessToken, data.result.user);
+        toast.success(`Welcome back, Admin! ✦`);
+        navigate(from, { replace: true });
+      } else {
+        // User: Proceed to OTP
+        setStep(2);
+        toast.success('OTP sent to your email');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Login failed.');
+    } finally { setLoading(false); }
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (!otp.trim()) return toast.error('Please enter the OTP');
+
+    setLoading(true);
+    try {
+      const { data } = await api.post('/verify-otp', { 
+        email: email.trim().toLowerCase(), 
+        otp: otp.trim() 
+      });
       setTokens(data.result.accessToken, data.result.user);
-      toast.success(isLogin ? `Welcome back${data.result.user.name ? ', ' + data.result.user.name : ''}! ✦` : `Registration successful! ✦`);
+      toast.success(`Welcome${data.result.user.name ? ', ' + data.result.user.name : ''}! ✦`);
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error(err.response?.data?.message || (isLogin ? 'Login failed.' : 'Registration failed.'));
+      toast.error(err.response?.data?.msg || 'Invalid OTP.');
     } finally { setLoading(false); }
   };
 
@@ -48,52 +69,52 @@ const LoginPage = () => {
           {/* Header */}
           <div className="text-center mb-9">
             <Link to="/" className="font-serif text-xl text-gold-light tracking-widest mb-5 block">✦ Aurora Jewels</Link>
-            <h1 className="font-serif text-3xl text-white mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+            <h1 className="font-serif text-3xl text-white mb-2">
+              {step === 1 ? 'Welcome' : 'Verify Email'}
+            </h1>
             <p className="text-sm text-white/50">
-              {isLogin ? 'Sign in to access your account' : 'Join us for exclusive collections'}
+              {step === 1 ? 'Enter your email to continue' : `Enter the 6-digit code sent to ${email}`}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {!isLogin && (
+          {step === 1 ? (
+            <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="name" className="text-xs uppercase tracking-wide text-white/50 font-medium">Full Name</label>
+                <label htmlFor="email" className="text-xs uppercase tracking-wide text-white/50 font-medium">Email Address</label>
                 <input
-                  id="name" type="text" autoFocus required={!isLogin}
-                  placeholder="John Doe"
-                  value={name} onChange={e => setName(e.target.value)}
+                  id="email" type="email" autoFocus required
+                  placeholder="you@example.com"
+                  value={email} onChange={e => setEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-white/[0.07] border border-white/15 rounded text-white placeholder-white/30 text-sm focus:border-gold focus:bg-white/10 focus:shadow-[0_0_0_3px_rgba(201,168,76,0.2)] outline-none transition-all"
                 />
               </div>
-            )}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-xs uppercase tracking-wide text-white/50 font-medium">Email Address</label>
-              <input
-                id="email" type="email" autoFocus={isLogin} required
-                placeholder="you@example.com"
-                value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/[0.07] border border-white/15 rounded text-white placeholder-white/30 text-sm focus:border-gold focus:bg-white/10 focus:shadow-[0_0_0_3px_rgba(201,168,76,0.2)] outline-none transition-all"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="text-xs uppercase tracking-wide text-white/50 font-medium">Password</label>
-              <input
-                id="password" type="password" required
-                placeholder="••••••••"
-                value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white/[0.07] border border-white/15 rounded text-white placeholder-white/30 text-sm focus:border-gold focus:bg-white/10 focus:shadow-[0_0_0_3px_rgba(201,168,76,0.2)] outline-none transition-all"
-              />
-            </div>
-            <button type="submit" disabled={loading} className="btn btn-primary w-full py-4 text-sm gap-2.5">
-              {loading ? <><div className="spinner spinner-sm" /> Processing…</> : (isLogin ? 'Login →' : 'Register →')}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-xs text-gold-light hover:text-white transition-colors">
-              {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
-            </button>
-          </div>
+              <button type="submit" disabled={loading} className="btn btn-primary w-full py-4 text-sm gap-2.5">
+                {loading ? <><div className="spinner spinner-sm" /> Processing…</> : 'Continue →'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleOtpSubmit} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="otp" className="text-xs uppercase tracking-wide text-white/50 font-medium">One-Time Password</label>
+                <input
+                  id="otp" type="text" autoFocus required maxLength={6}
+                  placeholder="000000"
+                  value={otp} onChange={e => setOtp(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/[0.07] border border-white/15 rounded text-white placeholder-white/30 text-center text-2xl tracking-[10px] focus:border-gold focus:bg-white/10 focus:shadow-[0_0_0_3px_rgba(201,168,76,0.2)] outline-none transition-all font-mono"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn btn-primary w-full py-4 text-sm gap-2.5">
+                {loading ? <><div className="spinner spinner-sm" /> Verifying…</> : 'Verify & Login →'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setStep(1)}
+                className="text-xs text-white/30 hover:text-white transition-colors mt-2"
+              >
+                ← Back to email
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

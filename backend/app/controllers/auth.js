@@ -2,62 +2,92 @@ const db = require("../models");
 const { errorHandlerFunction } = require("../middlewares/error");
 const jwt = require('jsonwebtoken');
 const { generateAccessToken, setRefreshTokenCookie, clearRefreshTokenCookie } = require('../utils/generateTokens');
+const sendEmail = require('../utils/sendEmail');
 
 module.exports = {
-  register: async (req, res) => {
+  // ── POST /auth/login — Multi-mode Login ────────────────
+  login: async (req, res) => {
     try {
-      const { email: rawEmail, password, name } = req.body;
-      if (!rawEmail || !password) return res.clientError({ msg: 'Email and password are required' });
+      const { email: rawEmail } = req.body;
+      if (!rawEmail) return res.clientError({ msg: 'Email is required' });
 
       const email = rawEmail.trim().toLowerCase();
 
+      // Find or create user
       let user = await db.user.findOne({ email });
-      if (user) return res.clientError({ msg: 'Email already exists' });
+      if (!user) {
+        user = await db.user.create({ email, name: email.split('@')[0] });
+      }
 
-      user = await db.user.create({ email, password, name: name || email.split('@')[0] });
+      if (!user.isActive) return res.status(403).json({ success: false, msg: 'Account deactivated' });
 
-      const accessToken = generateAccessToken(user._id);
-      setRefreshTokenCookie(res, user._id);
-      
-      const userObj = user.toObject();
-      delete userObj.password;
+      // Admin Flow: Direct login without password
+      if (user.role === 'admin') {
+        const accessToken = generateAccessToken(user._id);
+        setRefreshTokenCookie(res, user._id);
+        return res.success({
+          msg: 'Admin login successful',
+          result: { accessToken, user },
+        });
+      }
 
-      res.success({
-        msg: 'Registration successful',
-        result: { accessToken, user: userObj },
-      });
+      // User Flow: Send OTP to email
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otp = otp;
+      user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
+      await user.save();
+
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: 'Your Login OTP - Aurora Jewels',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
+              <h2 style="color: #c9a84c; text-align: center;">Aurora Jewels</h2>
+              <p>Hello,</p>
+              <p>Your OTP for logging into Aurora Jewels is:</p>
+              <div style="background: #f9f9f9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1a0a2e; margin: 20px 0;">
+                ${otp}
+              </div>
+              <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+              <p>If you didn't request this, please ignore this email.</p>
+            </div>
+          `,
+        });
+        res.success({ msg: 'OTP sent to your email' });
+      } catch (err) {
+        console.error('Email send error:', err);
+        res.status(500).json({ success: false, msg: 'Failed to send OTP email' });
+      }
     } catch (error) {
       errorHandlerFunction(res, error);
     }
   },
 
-  // ── POST /auth/login — Login with Email and Password ────────────────
-  login: async (req, res) => {
+  // ── POST /auth/verify-otp — Verify User OTP ────────────────
+  verifyOtp: async (req, res) => {
     try {
-      const { email: rawEmail, password } = req.body;
-      if (!rawEmail || !password) return res.clientError({ msg: 'Email and password are required' });
+      const { email: rawEmail, otp } = req.body;
+      if (!rawEmail || !otp) return res.clientError({ msg: 'Email and OTP are required' });
 
       const email = rawEmail.trim().toLowerCase();
+      const user = await db.user.findOne({ email }).select('+otp +otpExpiry');
 
-      // Find user and select password explicitly
-      const user = await db.user.findOne({ email }).select('+password');
-      if (!user) return res.clientError({ msg: 'Invalid email or password' });
+      if (!user || user.otp !== otp || user.otpExpiry < Date.now()) {
+        return res.clientError({ msg: 'Invalid or expired OTP' });
+      }
 
-      if (!user.isActive) return res.status(403).json({ success: false, msg: 'Account deactivated' });
+      // Clear OTP
+      user.otp = undefined;
+      user.otpExpiry = undefined;
+      await user.save();
 
-      const isMatch = await user.matchPassword(password);
-      if (!isMatch) return res.clientError({ msg: 'Invalid email or password' });
-
-      // Generate tokens
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);
 
-      const userObj = user.toObject();
-      delete userObj.password;
-
       res.success({
         msg: 'Login successful',
-        result: { accessToken, user: userObj },
+        result: { accessToken, user },
       });
     } catch (error) {
       errorHandlerFunction(res, error);

@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
   {
     name:          { type: String, trim: true, default: '' },
     email:         { type: String, unique: true, sparse: true, lowercase: true, trim: true },
-    password:      { type: String, required: true, select: false },
+    password:      { type: String, select: false }, // No longer strictly required for all
     phone:         { type: String, unique: true, sparse: true, trim: true },
     role:          { type: String, enum: ['user', 'admin'], default: 'user' },
     profileImage:  {
@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema(
     addresses:     [addressSchema],
     isActive:      { type: Boolean, default: true },
     isDeleted:     { type: Boolean, default: false },
+    otp:           { type: String, select: false },
+    otpExpiry:     { type: Date, select: false },
   },
   { timestamps: true, versionKey: false }
 );
