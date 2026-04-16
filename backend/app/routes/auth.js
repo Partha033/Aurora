@@ -4,6 +4,7 @@ const authController = require('../controllers/auth');
 const { protect } = require('../middlewares/auth');
 const { upload }  = require('../utils/cloudinary');
 
+router.post('/register', authController.register);
 router.post('/login',   authController.login);
 router.post('/refresh', authController.refresh);
 router.post('/logout',  authController.logout);

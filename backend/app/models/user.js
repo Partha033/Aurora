@@ -1,4 +1,5 @@
 const { mongoose } = require('../services/imports');
+const bcrypt = require('bcryptjs');
 
 const addressSchema = new mongoose.Schema({
   label:   { type: String, default: 'Home' },
@@ -14,6 +15,7 @@ const userSchema = new mongoose.Schema(
   {
     name:          { type: String, trim: true, default: '' },
     email:         { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+    password:      { type: String, required: true, select: false },
     phone:         { type: String, unique: true, sparse: true, trim: true },
     role:          { type: String, enum: ['user', 'admin'], default: 'user' },
     profileImage:  {
@@ -26,5 +28,22 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Compare password method
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = mongoose.model('user', userSchema, 'user');

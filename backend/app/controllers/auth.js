@@ -4,29 +4,60 @@ const jwt = require('jsonwebtoken');
 const { generateAccessToken, setRefreshTokenCookie, clearRefreshTokenCookie } = require('../utils/generateTokens');
 
 module.exports = {
-  // ── POST /auth/login — Login/Register with Email Only ────────────────
-  login: async (req, res) => {
+  register: async (req, res) => {
     try {
-      const { email: rawEmail } = req.body;
-      if (!rawEmail) return res.clientError({ msg: 'Email is required' });
+      const { email: rawEmail, password, name } = req.body;
+      if (!rawEmail || !password) return res.clientError({ msg: 'Email and password are required' });
 
       const email = rawEmail.trim().toLowerCase();
 
-      // Find or create user
       let user = await db.user.findOne({ email });
-      if (!user) {
-        user = await db.user.create({ email, name: email.split('@')[0] });
-      }
+      if (user) return res.clientError({ msg: 'Email already exists' });
+
+      user = await db.user.create({ email, password, name: name || email.split('@')[0] });
+
+      const accessToken = generateAccessToken(user._id);
+      setRefreshTokenCookie(res, user._id);
+      
+      const userObj = user.toObject();
+      delete userObj.password;
+
+      res.success({
+        msg: 'Registration successful',
+        result: { accessToken, user: userObj },
+      });
+    } catch (error) {
+      errorHandlerFunction(res, error);
+    }
+  },
+
+  // ── POST /auth/login — Login with Email and Password ────────────────
+  login: async (req, res) => {
+    try {
+      const { email: rawEmail, password } = req.body;
+      if (!rawEmail || !password) return res.clientError({ msg: 'Email and password are required' });
+
+      const email = rawEmail.trim().toLowerCase();
+
+      // Find user and select password explicitly
+      const user = await db.user.findOne({ email }).select('+password');
+      if (!user) return res.clientError({ msg: 'Invalid email or password' });
 
       if (!user.isActive) return res.status(403).json({ success: false, msg: 'Account deactivated' });
+
+      const isMatch = await user.matchPassword(password);
+      if (!isMatch) return res.clientError({ msg: 'Invalid email or password' });
 
       // Generate tokens
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);
 
+      const userObj = user.toObject();
+      delete userObj.password;
+
       res.success({
         msg: 'Login successful',
-        result: { accessToken, user },
+        result: { accessToken, user: userObj },
       });
     } catch (error) {
       errorHandlerFunction(res, error);

@@ -11,6 +11,10 @@ if (dns.setDefaultResultOrder) {
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const connectDB = require('./connection');
 const responseHandler = require('./app/middlewares/response-handler');
 
@@ -18,6 +22,19 @@ const app = express();
 
 // ✅ Connect DB
 connectDB();
+
+// ✅ Security & Optimization Middlewares
+app.use(helmet()); // Secure HTTP headers
+app.use(mongoSanitize()); // Prevent NoSQL injection
+app.use(compression()); // Compress responses for a "lighter" and faster site
+
+// ✅ Rate Limiting (Prevent DDoS / Brute Force)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+});
+app.use('/api/', limiter);
 
 // ✅ CORS (FIXED)
 const allowedOrigins = [
