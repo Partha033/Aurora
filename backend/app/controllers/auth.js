@@ -79,7 +79,7 @@ module.exports = {
                 
                 <!-- Footer Section -->
                 <div style="background: #000; padding: 30px; text-align: center;">
-                  <p style="color: #333; font-size: 10px; letter-spacing: 3px; margin: 0;">AURORAJEWELS.COM</p>
+                  <a href="https://aurora-chi-snowy.vercel.app/" style="color: #333; font-size: 10px; letter-spacing: 3px; margin: 0; text-decoration: none; font-weight: bold;">AURORAJEWELS.COM</a>
                 </div>
               </div>
             </div>

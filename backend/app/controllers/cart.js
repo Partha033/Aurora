@@ -16,9 +16,13 @@ module.exports = {
 
       // Re-calculate totals from live product prices
       const items = cart.items.filter(i => i.product && !i.product.isDeleted);
+      // Load Settings for shipping
+      const settingsDoc = await db.settings.findOne({ key: 'system_config' });
+      const shippingSettings = settingsDoc?.value?.shipping || { baseCharge: 100, freeThreshold: 3000 };
+
       const subtotal = items.reduce((sum, i) => sum + i.priceAtAddition * i.quantity, 0);
-      const shipping  = subtotal >= 999 ? 0 : 79;
-      const total     = subtotal + shipping;
+      const shipping = subtotal >= shippingSettings.freeThreshold ? 0 : shippingSettings.baseCharge;
+      const total    = subtotal + shipping;
 
       res.success({ result: { _id: cart._id, items, subtotal, shipping, total } });
     } catch (error) {
@@ -54,8 +58,12 @@ module.exports = {
       }
 
       cart = await db.cart.findById(cart._id).populate('items.product');
+      // Load Settings for shipping
+      const settingsDoc = await db.settings.findOne({ key: 'system_config' });
+      const shippingSettings = settingsDoc?.value?.shipping || { baseCharge: 100, freeThreshold: 3000 };
+
       const subtotal = cart.items.reduce((s, i) => s + i.priceAtAddition * i.quantity, 0);
-      const shipping = subtotal >= 999 ? 0 : 79;
+      const shipping = subtotal >= shippingSettings.freeThreshold ? 0 : shippingSettings.baseCharge;
 
       res.success({ msg: 'Item added to cart', result: { _id: cart._id, items: cart.items, subtotal, shipping, total: subtotal + shipping } });
     } catch (error) {
@@ -81,8 +89,12 @@ module.exports = {
       await cart.save();
 
       const populated = await db.cart.findById(cart._id).populate('items.product');
-      const subtotal  = populated.items.reduce((s, i) => s + i.priceAtAddition * i.quantity, 0);
-      const shipping  = subtotal >= 999 ? 0 : 79;
+      // Load Settings for shipping
+      const settingsDoc = await db.settings.findOne({ key: 'system_config' });
+      const shippingSettings = settingsDoc?.value?.shipping || { baseCharge: 100, freeThreshold: 3000 };
+
+      const subtotal = populated.items.reduce((s, i) => s + i.priceAtAddition * i.quantity, 0);
+      const shipping = subtotal >= shippingSettings.freeThreshold ? 0 : shippingSettings.baseCharge;
 
       res.success({ msg: 'Cart updated', result: { _id: populated._id, items: populated.items, subtotal, shipping, total: subtotal + shipping } });
     } catch (error) {
@@ -101,8 +113,12 @@ module.exports = {
       await cart.save();
 
       const populated = await db.cart.findById(cart._id).populate('items.product');
-      const subtotal  = populated.items.reduce((s, i) => s + i.priceAtAddition * i.quantity, 0);
-      const shipping  = subtotal >= 999 ? 0 : 79;
+      // Load Settings for shipping
+      const settingsDoc = await db.settings.findOne({ key: 'system_config' });
+      const shippingSettings = settingsDoc?.value?.shipping || { baseCharge: 100, freeThreshold: 3000 };
+
+      const subtotal = populated.items.reduce((s, i) => s + i.priceAtAddition * i.quantity, 0);
+      const shipping = subtotal >= shippingSettings.freeThreshold ? 0 : shippingSettings.baseCharge;
 
       res.success({ msg: 'Item removed', result: { _id: populated._id, items: populated.items, subtotal, shipping, total: subtotal + shipping } });
     } catch (error) {

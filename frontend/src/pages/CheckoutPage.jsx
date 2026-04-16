@@ -197,7 +197,7 @@ const CheckoutPage = () => {
                 {[
                   { val: 'cod',    icon: '💵', title: 'Cash on Delivery',        sub: 'Pay when your order arrives', enabled: settings?.paymentMethods?.cod ?? true },
                   { val: 'online', icon: '💳', title: 'Pay Online via Razorpay', sub: 'UPI, Cards, Net Banking — instant confirmation', enabled: settings?.paymentMethods?.online ?? true },
-                  { val: 'upi',    icon: '📲', title: 'Direct UPI Transfer',     sub: 'Pay via UPI ID: 9344619085@ptyes', enabled: true },
+                  { val: 'upi',    icon: '📲', title: 'Direct UPI Transfer',     sub: 'Pay via UPI ID: aurora.0802@ptyes', enabled: true },
                 ].filter(p => p.enabled).map(({ val, icon, title, sub }) => (
                   <label key={val} className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === val ? 'border-gold bg-gold/5' : 'border-slate-200 hover:border-gold/40'}`}>
                     <input type="radio" name="payment" value={val} checked={paymentMethod === val}
@@ -217,14 +217,14 @@ const CheckoutPage = () => {
                   <div className="bg-white p-3 rounded-xl shadow-sm mb-4">
                     {/* Placeholder for QR Code - User can replace src with their actual image path */}
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent("upi://pay?pa=9344619085@ptyes&pn=Parthiban A&cu=INR")}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent("upi://pay?pa=aurora.0802@ptyes&pn=Parthiban A&cu=INR")}`} 
                       alt="UPI QR Code" 
                       className="w-40 h-40 object-contain"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-slate-400">UPI ID</span>
-                    <strong className="text-lg text-navy tracking-wide">9344619085@ptyes</strong>
+                    <strong className="text-lg text-navy tracking-wide">aurora.0802@ptyes</strong>
                     <p className="text-[10px] text-slate-400 mt-2 px-4 italic">
                       Please mention your name or order total in the payment note. Your order will be confirmed once payment is verified.
                     </p>
