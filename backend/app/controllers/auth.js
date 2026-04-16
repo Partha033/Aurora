@@ -109,10 +109,10 @@ module.exports = {
         return res.clientError({ msg: 'Invalid or expired OTP' });
       }
 
-      // Clear OTP
-      user.otp = undefined;
-      user.otpExpiry = undefined;
-      await user.save({ validateBeforeSave: false });
+      // Clear OTP using direct update to bypass ANY hooks that might cause issues
+      await db.user.updateOne({ _id: user._id }, {
+        $unset: { otp: 1, otpExpiry: 1 }
+      });
 
       const accessToken = generateAccessToken(user._id);
       setRefreshTokenCookie(res, user._id);

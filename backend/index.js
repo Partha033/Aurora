@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('express-async-errors');
 const dns = require('dns');
 
 // ── GLOBAL FIX: Force IPv4 priority for all network requests (Node 17+) ────
